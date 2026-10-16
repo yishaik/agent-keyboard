@@ -15,4 +15,5 @@ tools/*.txt
 *.patch
 *.diff
 *.sh
+!scripts/fetch-glide.sh
 app/glide-assets/
