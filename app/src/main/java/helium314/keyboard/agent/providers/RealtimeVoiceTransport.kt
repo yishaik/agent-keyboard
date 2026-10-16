@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.serialization.json.*
 import okhttp3.*
+import helium314.keyboard.agent.settings.Provider
 
 /**
  * OpenAI-Realtime-compatible WebSocket client. Grok Voice speaks the same event
@@ -26,7 +27,7 @@ class RealtimeVoiceTransport(
     private var ws: WebSocket? = null
 
     override suspend fun connect(instructions: String, tools: List<JsonObject>, history: List<Turn>) {
-        val token = broker.ephemeral(spec.provider, "realtime")
+        val token = broker.ephemeral(spec.provider, spec.voiceModel)
         val req = Request.Builder().url(spec.realtimeUrl).header("Authorization", "Bearer $token").build()
         ws = http.newWebSocket(req, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -40,14 +41,36 @@ class RealtimeVoiceTransport(
         })
     }
 
+    /**
+     * OpenAI GA nests audio settings under session.audio and needs session.type;
+     * Grok Voice takes voice / turn_detection at the top level. Both default to
+     * 24 kHz PCM16 in and out, which is what [helium314.keyboard.agent.audio.AudioIO] uses.
+     */
     private fun sessionUpdate(instructions: String, tools: List<JsonObject>) = buildJsonObject {
         put("type", "session.update")
         putJsonObject("session") {
             put("instructions", instructions)
-            if (voiceName.isNotBlank()) put("voice", voiceName)
             putJsonArray("tools") { tools.forEach { add(it) } }
-            if (vad) putJsonObject("turn_detection") { put("type", "server_vad") }
-            else put("turn_detection", JsonNull)
+            val turn: JsonElement = if (vad) buildJsonObject { put("type", "server_vad") } else JsonNull
+            when (spec.provider) {
+                Provider.OPENAI -> {
+                    put("type", "realtime")
+                    putJsonObject("audio") {
+                        putJsonObject("input") {
+                            put("turn_detection", turn)
+                            spec.transcriptionModel?.let { m -> putJsonObject("transcription") { put("model", m) } }
+                        }
+                        if (voiceName.isNotBlank()) putJsonObject("output") { put("voice", voiceName) }
+                    }
+                }
+                Provider.GROK -> {
+                    if (voiceName.isNotBlank()) put("voice", voiceName)
+                    put("turn_detection", turn)
+                    spec.transcriptionModel?.let { m ->
+                        putJsonObject("audio") { putJsonObject("input") { putJsonObject("transcription") { put("model", m) } } }
+                    }
+                }
+            }
         }
     }
 
@@ -77,6 +100,8 @@ class RealtimeVoiceTransport(
                 name = e["name"]!!.jsonPrimitive.content,
                 args = runCatching { Json.parseToJsonElement(e["arguments"]!!.jsonPrimitive.content).jsonObject }.getOrDefault(JsonObject(emptyMap())),
             ))
+            "input_audio_buffer.speech_started" -> _events.tryEmit(AgentEvent.SpeechStarted)
+            "session.created", "session.updated" -> _events.tryEmit(AgentEvent.Status("ready"))
             "response.done" -> _events.tryEmit(AgentEvent.TurnDone)
             "error" -> _events.tryEmit(AgentEvent.Failed(e["error"]?.toString() ?: "error", retryable = false))
         }
@@ -84,6 +109,11 @@ class RealtimeVoiceTransport(
 
     override fun sendAudio(pcm16: ByteArray) {
         send(buildJsonObject { put("type", "input_audio_buffer.append"); put("audio", Base64.encodeToString(pcm16, Base64.NO_WRAP)) })
+    }
+
+    override fun commitAudio() {
+        send(buildJsonObject { put("type", "input_audio_buffer.commit") })
+        send(buildJsonObject { put("type", "response.create") })
     }
 
     override fun sendToolResult(callId: String, output: String) {

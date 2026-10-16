@@ -57,12 +57,14 @@ fun MainSettingsScreen(
                 Modifier.verticalScroll(rememberScrollState()).then(Modifier.padding(innerPadding))
             ) {
                 Preference(
-                    name = "Agent", // TODO string resource (he/en)
+                    name = stringResource(R.string.settings_screen_agent),
+                    description = stringResource(R.string.settings_screen_agent_summary),
                     onClick = onClickAgent,
-                    icon = R.drawable.ic_settings_preferences // TODO sparkle icon
+                    icon = R.drawable.ic_agent
                 ) { NextScreenIcon() }
                 Preference(
-                    name = "Connections", // TODO string resource (he/en)
+                    name = stringResource(R.string.settings_screen_connections),
+                    description = stringResource(R.string.settings_screen_connections_summary),
                     onClick = onClickConnections,
                     icon = R.drawable.ic_settings_advanced
                 ) { NextScreenIcon() }
@@ -136,7 +138,7 @@ private fun PreviewScreen() {
     initPreview(LocalContext.current)
     Theme(previewDark) {
         Surface {
-            MainSettingsScreen({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+            MainSettingsScreen({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, onClickBack = {})
         }
     }
 }

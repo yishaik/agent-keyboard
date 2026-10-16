@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="agent">סוכן</string>
+    <string name="agent_hint">מה לעשות?</string>
+    <string name="agent_send">שלח</string>
+    <string name="agent_insert">הכנס</string>
+    <string name="agent_cancel">ביטול</string>
+    <string name="agent_allow">אשר</string>
+    <string name="agent_deny">דחה</string>
+    <string name="agent_stop">עצור</string>
+    <string name="agent_exit">יציאה ממצב סוכן</string>
+    <string name="agent_thinking">חושב…</string>
+    <string name="agent_connecting">מתחבר…</string>
+    <string name="agent_listening">מקשיב…</string>
+    <string name="agent_hold_to_talk">החזק כדי לדבר</string>
+    <string name="agent_fallback">עבר ל־%s</string>
+    <string name="agent_not_configured">צריך להגדיר Token broker בהגדרות › סוכן</string>
+    <string name="agent_password_blocked">הסוכן כבוי בשדות סיסמה</string>
+    <string name="agent_mic_permission">הסוכן הקולי צריך הרשאת מיקרופון</string>
+    <string name="agent_confirm_run">להריץ %s?</string>
+    <string name="agent_tool_running">משתמש ב־%s…</string>
+    <string name="agent_error">שגיאת סוכן: %s</string>
+    <string name="agent_done">בוצע</string>
+    <string name="agent_mic_title">מיקרופון לסוכן הקולי</string>
+    <string name="agent_mic_body">המקלדת מקליטה רק כשהסוכן הקולי פעיל, ומשדרת רק לספק שבחרת.</string>
+    <string name="agent_grant">אפשר מיקרופון</string>
+
+    <string name="settings_screen_agent">סוכן</string>
+    <string name="settings_screen_agent_summary">ספקים, קול, קריאת מסך, הרשאות</string>
+    <string name="settings_screen_connections">חיבורים</string>
+    <string name="settings_screen_connections_summary">אפליקציות מחוברות דרך OpenConnector שלך</string>
+    <string name="agent_broker_token">App token של ה־Token broker</string>
+    <string name="agent_test">בדיקה</string>
+    <string name="agent_test_ok">עובד</string>
+    <string name="agent_test_fail">נכשל: %s</string>
+</resources>

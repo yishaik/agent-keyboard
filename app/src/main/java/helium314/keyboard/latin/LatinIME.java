@@ -142,6 +142,8 @@ public class LatinIME extends InputMethodService implements
     private View mInputView;
     private InsetsOutlineProvider mInsetsUpdater;
     private SuggestionStripView mSuggestionStripView;
+    // Agent Keyboard: the agent strip, typed agent mode and voice agent
+    private helium314.keyboard.agent.ime.AgentController mAgentController;
 
     private RichInputMethodManager mRichImm;
     final KeyboardSwitcher mKeyboardSwitcher;
@@ -550,6 +552,7 @@ public class LatinIME extends InputMethodService implements
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();
+        mAgentController = new helium314.keyboard.agent.ime.AgentController(this);
         AudioAndHapticFeedbackManager.init(this);
         AccessibilityUtils.init(this);
         mStatsUtilsManager.onCreate(this, mDictionaryFacilitator);
@@ -705,6 +708,7 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onDestroy() {
+        if (mAgentController != null) mAgentController.onDestroy();
         mClipboardHistoryManager.onDestroy();
         mDictionaryFacilitator.closeDictionaries();
         mSettings.onDestroy();
@@ -871,6 +875,7 @@ public class LatinIME extends InputMethodService implements
         super.onStartInputView(editorInfo, restarting);
 
         setGestureDataGatheringMode(editorInfo, restarting);
+        if (mAgentController != null) mAgentController.onStartInputView(editorInfo);
 
         mDictionaryFacilitator.onStartInput();
         // Switch to the null consumer to handle cases leading to early exit below, for which we
@@ -1053,6 +1058,7 @@ public class LatinIME extends InputMethodService implements
     void onFinishInputViewInternal(final boolean finishingInput) {
         super.onFinishInputView(finishingInput);
         Log.i(TAG, "onFinishInputView");
+        if (mAgentController != null) mAgentController.onFinishInputView();
         cleanupInternalStateForFinishInput();
     }
 
@@ -1336,6 +1342,7 @@ public class LatinIME extends InputMethodService implements
             return false;
         }
 
+        if (mAgentController != null && mAgentController.isShowing()) return false;
         final View inlineSuggestionView = InlineAutofillUtils.createView(inlineSuggestions, mDisplayContext);
 
         // Without this function the inline autofill suggestions will not be visible
@@ -1428,6 +1435,10 @@ public class LatinIME extends InputMethodService implements
     // This method is public for testability of LatinIME, but also in the future it should
     // completely replace #onCodeInput.
     public void onEvent(@NonNull final Event event) {
+        if (mAgentController != null && mAgentController.onEvent(event)) {
+            mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
+            return;
+        }
         if (KeyCode.VOICE_INPUT == event.getKeyCode()) {
             mRichImm.switchToShortcutIme(this);
         }
@@ -1441,6 +1452,7 @@ public class LatinIME extends InputMethodService implements
 
     public void onTextInput(@Nullable String rawText) {
         if (rawText == null) return;
+        if (mAgentController != null && mAgentController.onTextInput(rawText)) return;
         // TODO: have the keyboard pass the correct key code when we need it.
         Event event = Event.createSoftwareTextEvent(rawText, KeyCode.MULTIPLE_CODE_POINTS, null);
         InputTransaction completeInputTransaction = mInputLogic.onTextInput(mSettings.getCurrent(),
@@ -1498,6 +1510,7 @@ public class LatinIME extends InputMethodService implements
     private void setSuggestedWords(final SuggestedWords suggestedWords) {
         final SettingsValues currentSettingsValues = mSettings.getCurrent();
         mInputLogic.setSuggestedWords(suggestedWords);
+        if (mAgentController != null && mAgentController.isShowing()) return; // agent owns the strip
         // TODO: Modify this when we support suggestions with hard keyboard
         if (!hasSuggestionStripView()) {
             return;
@@ -1567,6 +1580,7 @@ public class LatinIME extends InputMethodService implements
      */
     public boolean tryShowClipboardSuggestion() {
         if (!hasSuggestionStripView()) return false;
+        if (mAgentController != null && mAgentController.isShowing()) return false;
         View clipboardView = mClipboardHistoryManager.getClipboardSuggestionView(getCurrentInputEditorInfo(), mSuggestionStripView);
         if (clipboardView != null) {
             mSuggestionStripView.setExternalSuggestionView(clipboardView, false);
@@ -1606,6 +1620,26 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void removeSuggestion(final String word) {
         mDictionaryFacilitator.removeWord(word);
+    }
+
+    /** Agent Keyboard: show the agent strip in place of suggestions, or null to give the strip back. */
+    public void showAgentStrip(@Nullable final View view) {
+        if (!hasSuggestionStripView()) return;
+        if (view == null) {
+            removeExternalSuggestions();
+            return;
+        }
+        if (view.getParent() != null) {
+            if (view.getVisibility() != View.VISIBLE) view.setVisibility(View.VISIBLE);
+            return; // already shown
+        }
+        mSuggestionStripView.setExternalSuggestionView(view, false);
+        mSuggestionStripView.setToolbarVisibility(false);
+    }
+
+    /** Agent Keyboard: hand over to the system voice-typing IME (normal dictation). */
+    public void startDictation() {
+        mRichImm.switchToShortcutIme(this);
     }
 
     @Override

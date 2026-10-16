@@ -66,7 +66,7 @@ android {
             }
             variant.outputs.forEach { output ->
                 if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
-                    output.outputFileName = "HeliBoard_${defaultConfig.versionName}-${variant.buildType}.apk"
+                    output.outputFileName = "AgentKeyboard_${defaultConfig.versionName}-${variant.buildType}.apk"
                 }
             }
         }
@@ -78,9 +78,16 @@ android {
         compose = true
     }
 
-    externalNativeBuild {
-        ndkBuild {
-            path = File("src/main/jni/Android.mk")
+    // -Pagent.prebuiltNative=true skips ndk-build and packages the prebuilt
+    // libjni_latinime.so from app/prebuilt-jni (taken from the matching HeliBoard release).
+    // Used where no NDK host build exists (e.g. linux-arm64 CI).
+    if (project.findProperty("agent.prebuiltNative")?.toString() == "true") {
+        sourceSets.getByName("main").jniLibs.srcDirs("prebuilt-jni")
+    } else {
+        externalNativeBuild {
+            ndkBuild {
+                path = File("src/main/jni/Android.mk")
+            }
         }
     }
     ndkVersion = "28.0.13004108"

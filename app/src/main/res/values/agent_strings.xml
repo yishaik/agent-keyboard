@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- toolbar key (name must equal lowercase ToolbarKey.AGENT) -->
+    <string name="agent" tools:keep="@string/agent">Agent</string>
+    <string name="agent_hint">Ask the agent…</string>
+    <string name="agent_send">Send</string>
+    <string name="agent_insert">Insert</string>
+    <string name="agent_cancel">Cancel</string>
+    <string name="agent_allow">Allow</string>
+    <string name="agent_deny">Deny</string>
+    <string name="agent_stop">Stop</string>
+    <string name="agent_exit">Exit agent</string>
+    <string name="agent_thinking">Thinking…</string>
+    <string name="agent_connecting">Connecting…</string>
+    <string name="agent_listening">Listening…</string>
+    <string name="agent_hold_to_talk">Hold to talk</string>
+    <string name="agent_fallback">Switched to %s</string>
+    <string name="agent_not_configured">Set the token broker in Settings › Agent</string>
+    <string name="agent_password_blocked">The agent is off in password fields</string>
+    <string name="agent_mic_permission">Microphone permission is needed for the voice agent</string>
+    <string name="agent_confirm_run">Run %s?</string>
+    <string name="agent_tool_running">Using %s…</string>
+    <string name="agent_error">Agent error: %s</string>
+    <string name="agent_done">Done</string>
+    <string name="agent_mic_title">Microphone for the voice agent</string>
+    <string name="agent_mic_body">Agent Keyboard records only while the voice agent is on, and streams audio only to the provider you chose.</string>
+    <string name="agent_grant">Allow microphone</string>
+
+    <!-- settings -->
+    <string name="settings_screen_agent">Agent</string>
+    <string name="settings_screen_agent_summary">Providers, voice, screen reading, permissions</string>
+    <string name="settings_screen_connections">Connections</string>
+    <string name="settings_screen_connections_summary">Connected apps via your OpenConnector</string>
+    <string name="agent_broker_token">Token broker app token</string>
+    <string name="agent_test">Test</string>
+    <string name="agent_test_ok">Works</string>
+    <string name="agent_test_fail">Failed: %s</string>
+</resources>

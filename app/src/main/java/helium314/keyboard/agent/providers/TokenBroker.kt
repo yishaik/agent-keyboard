@@ -16,8 +16,12 @@ import okhttp3.RequestBody.Companion.toRequestBody
  * provider token. Provider API keys live only in the Worker's secrets.
  */
 class TokenBroker(private val http: OkHttpClient, private val baseUrl: () -> String, private val appToken: () -> String?) {
-    suspend fun ephemeral(provider: Provider, kind: String = "realtime"): String = withContext(Dispatchers.IO) {
-        val body = """{"provider":"${provider.name.lowercase()}","kind":"$kind"}"""
+    suspend fun ephemeral(provider: Provider, model: String? = null, kind: String = "realtime"): String = withContext(Dispatchers.IO) {
+        val body = kotlinx.serialization.json.buildJsonObject {
+            put("provider", kotlinx.serialization.json.JsonPrimitive(provider.name.lowercase()))
+            put("kind", kotlinx.serialization.json.JsonPrimitive(kind))
+            model?.let { put("model", kotlinx.serialization.json.JsonPrimitive(it)) }
+        }.toString()
             .toRequestBody("application/json".toMediaType())
         val req = Request.Builder().url(baseUrl().trimEnd('/') + "/token")
             .header("Authorization", "Bearer ${appToken() ?: error("Token broker not configured")}")

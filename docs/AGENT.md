@@ -31,13 +31,31 @@ are both first-class.
 3. Install the app, enable the keyboard, set it as Digital assistant app.
 4. Settings > Agent: token broker URL. Settings > Connections: Worker URL + runtime token.
 
+## Using it
+- Toolbar: the sparkle key (first in the toolbar) toggles typed agent mode. Keys then type into the
+  agent line in the strip; Enter or Send runs it. Long-press the sparkle for the voice agent.
+- Mic key: tap = voice agent, long-press = normal dictation (swap in Settings > Agent > Mic tap).
+- Drafts appear in the strip with Insert / Cancel. Write actions in connected apps show Allow / Deny.
+- The agent never runs in password fields.
+
+## Building
+Normal machine with the Android SDK + NDK: `./gradlew assembleDebugNoMinify`.
+Without an NDK (e.g. linux-arm64): `./gradlew -Pagent.prebuiltNative=true assembleDebugNoMinify`
+packages `app/prebuilt-jni/*/libjni_latinime.so` from the HeliBoard v4.2 release instead of building it.
+
 ## Not done yet (next steps)
-- [ ] Build and fix compile errors (skeleton was written without an Android SDK build).
-- [ ] Agent key: new key code + agent subtype in the globe cycle; route keys to an internal buffer in agent mode.
-- [ ] `AgentController` in the IME: implements `ToolContext` (preview/confirm cards in the suggestion strip).
-- [ ] Audio: `AudioRecord` PCM16 capture to `sendAudio`, `AudioTrack` playback of `AudioChunk`.
-- [ ] Mic key: tap = agent / long-press = dictation (or swapped per settings).
-- [ ] Hebrew + English string resources; RTL check of agent UI.
-- [ ] OpenConnector: confirm catalog-search and named-connection endpoints, connections list in settings.
-- [ ] Token broker: pin model and expiry in client-secret requests per provider docs.
-- [ ] EncryptedSharedPreferences for `SecretStore`.
+- [x] Build and fix compile errors (debugNoMinify APK builds).
+- [x] Agent key (toolbar AGENT key, codes AGENT / AGENT_VOICE / VOICE_INPUT_LONG); keys routed to the agent line.
+- [x] `AgentController`: ToolContext with preview / confirm in the strip, typed + voice sessions, failover.
+- [x] Audio: 24 kHz PCM16 `AudioRecord` (VOICE_COMMUNICATION, echo-cancelled) / `AudioTrack`, barge-in, push-to-talk.
+- [x] Mic key: tap = agent / long-press = dictation (or swapped).
+- [x] Hebrew + English strings for keyboard UI and settings entries.
+- [x] OpenConnector via its MCP endpoint (search_actions, list_connections, execute_action); Test + accounts list in Connections.
+- [x] Token broker pins model + 300 s expiry per provider docs.
+- [x] Keystore AES-GCM for `SecretStore` (API 23+).
+- [ ] On-device test pass (real phone): VAD sensitivity, playback/echo, RTL layout of the strip.
+- [ ] Agent as a subtype in the globe cycle (currently a toolbar key).
+- [ ] Gesture typing into the agent line (batch input still goes to the field).
+- [ ] Translate remaining Agent settings labels (screen titles are translated; row labels are English).
+- [ ] Per-tool policy editor and blocked-apps picker in settings.
+- [ ] Token usage meter for the monthly cap.

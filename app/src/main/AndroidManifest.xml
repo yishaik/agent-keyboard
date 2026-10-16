@@ -133,6 +133,11 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
                 android:resource="@xml/gesture_data_path"/>
         </provider>
         <!-- Agent: default digital assistant role, gives the keyboard screen context -->
+        <activity android:name="helium314.keyboard.agent.ime.MicPermissionActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.DeviceDefault.Dialog.NoActionBar" />
+
         <service android:name="helium314.keyboard.agent.screen.AgentAssistService"
             android:permission="android.permission.BIND_VOICE_INTERACTION"
             android:exported="true">

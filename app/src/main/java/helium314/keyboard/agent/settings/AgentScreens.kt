@@ -10,7 +10,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import helium314.keyboard.latin.R
+import helium314.keyboard.agent.connectors.OpenConnectorClient
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.*
+import okhttp3.OkHttpClient
 
 /*
  * Two new categories in HeliBoard's settings: "Agent" (first) and "Connections".
@@ -54,15 +61,21 @@ private fun AgentScaffold(title: String, onBack: () -> Unit, content: @Composabl
 fun AgentScreen(onClickBack: () -> Unit) {
     val ctx = LocalContext.current
     val store = remember { AgentSettingsStore.get(ctx) }
+    val secrets = remember { SecretStore(ctx) }
     val s by store.state.collectAsState()
-    AgentScaffold("Agent", onClickBack) {
+    var brokerToken by remember { mutableStateOf(secrets.brokerAppToken.orEmpty()) }
+    AgentScaffold(stringResource(R.string.settings_screen_agent), onClickBack) {
         Section("Providers")
         ChoiceRow("Voice provider", s.voiceProvider, Provider.values()) { v -> store.update { it.copy(voiceProvider = v) } }
         ChoiceRow("Text provider", s.textProvider, Provider.values()) { v -> store.update { it.copy(textProvider = v) } }
         ChoiceRow("Hebrew voice", s.hebrewVoiceProvider ?: s.voiceProvider, Provider.values()) { v -> store.update { it.copy(hebrewVoiceProvider = v) } }
         ChoiceRow("English voice", s.englishVoiceProvider ?: s.voiceProvider, Provider.values()) { v -> store.update { it.copy(englishVoiceProvider = v) } }
         SwitchRow("Automatic fallback", s.autoFallback) { v -> store.update { it.copy(autoFallback = v) } }
-        TextRow("Token broker URL", s.tokenBrokerUrl, { v -> store.update { it.copy(tokenBrokerUrl = v) } })
+        TextRow("Token broker URL", s.tokenBrokerUrl, { v -> store.update { it.copy(tokenBrokerUrl = v.trim()) } })
+        OutlinedTextField(brokerToken, { brokerToken = it; secrets.brokerAppToken = it.trim() },
+            label = { Text(stringResource(R.string.agent_broker_token)) },
+            visualTransformation = PasswordVisualTransformation(), singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp))
 
         Section("Activation")
         ChoiceRow("Mic tap", s.micTap, MicTapAction.values()) { v -> store.update { it.copy(micTap = v) } }
@@ -102,14 +115,31 @@ fun ConnectionsScreen(onClickBack: () -> Unit) {
     val secrets = remember { SecretStore(ctx) }
     val s by store.state.collectAsState()
     var token by remember { mutableStateOf(secrets.connectorRuntimeToken.orEmpty()) }
-    AgentScaffold("Connections", onClickBack) {
+    AgentScaffold(stringResource(R.string.settings_screen_connections), onClickBack) {
         Section("Server (self-hosted OpenConnector)")
         TextRow("Worker URL", s.connectorUrl, { v -> store.update { it.copy(connectorUrl = v) } })
-        OutlinedTextField(token, { token = it; secrets.connectorRuntimeToken = it }, label = { Text("Runtime token (not the admin token)") }, modifier = Modifier.fillMaxWidth())
-        // TODO: "Test" button -> OpenConnectorClient.health()
+        OutlinedTextField(token, { token = it; secrets.connectorRuntimeToken = it.trim() }, label = { Text("Runtime token (not the admin token)") },
+            visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth())
+        val scope = rememberCoroutineScope()
+        var status by remember { mutableStateOf<String?>(null) }
+        var connections by remember { mutableStateOf<List<String>>(emptyList()) }
+        val client = remember { OpenConnectorClient(OkHttpClient(), { store.state.value.connectorUrl }, { secrets.connectorRuntimeToken }) }
+        val okText = stringResource(R.string.agent_test_ok)
+        val failText = stringResource(R.string.agent_test_fail)
+        Button(enabled = s.connectorUrl.isNotBlank() && token.isNotBlank(), onClick = {
+            scope.launch {
+                status = runCatching {
+                    val list = client.listConnections()
+                    connections = connectionLines(list)
+                    okText
+                }.getOrElse { failText.format(it.message ?: "?") }
+            }
+        }, modifier = Modifier.padding(top = 8.dp)) { Text(stringResource(R.string.agent_test)) }
+        status?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
 
         Section("My connections")
-        Text("TODO: list connections with alias, status, scopes; reconnect / disconnect.", style = MaterialTheme.typography.bodySmall)
+        if (connections.isEmpty()) Text("Tap Test to load your connected accounts.", style = MaterialTheme.typography.bodySmall)
+        connections.forEach { Text(it, modifier = Modifier.padding(vertical = 4.dp)) }
 
         Section("Add connection")
         Button(enabled = s.connectorUrl.isNotBlank(), onClick = {
@@ -118,5 +148,21 @@ fun ConnectionsScreen(onClickBack: () -> Unit) {
 
         Section("Agent permissions")
         Text("Reads allowed, writes ask. Per-action allow / ask / block. TODO.", style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+/** "gmail · work · me@example.com" lines from list_connections output, whatever its exact envelope. */
+private fun connectionLines(e: JsonElement): List<String> {
+    val arr = when (e) {
+        is JsonArray -> e
+        is JsonObject -> (e["connections"] ?: e["data"] ?: e["items"])?.let { it as? JsonArray } ?: JsonArray(listOf(e))
+        else -> return listOf(e.toString())
+    }
+    return arr.map { el ->
+        val o = el as? JsonObject ?: return@map el.toString()
+        fun f(vararg k: String) = k.firstNotNullOfOrNull { o[it]?.let { v -> (v as? JsonPrimitive)?.contentOrNull } }
+        listOfNotNull(f("service", "provider"), f("connectionName", "alias", "name"),
+            f("accountName", "email", "login", "account"), if (o["default"]?.jsonPrimitive?.booleanOrNull == true) "default" else null)
+            .joinToString(" · ")
     }
 }

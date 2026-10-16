@@ -10,6 +10,7 @@ data class ProviderSpec(
     val chatUrl: String,
     val voiceModel: String,
     val textModel: String,
+    val transcriptionModel: String?, // null = provider transcribes input on its own
 ) {
     companion object {
         fun of(p: Provider, s: AgentSettings) = when (p) {
@@ -19,6 +20,7 @@ data class ProviderSpec(
                 chatUrl = "https://api.x.ai/v1/chat/completions",
                 voiceModel = s.grokVoiceModel,
                 textModel = s.grokTextModel,
+                transcriptionModel = "grok-transcribe", // gives us the user's words for the strip and failover replay
             )
             Provider.OPENAI -> ProviderSpec(
                 p,
@@ -26,6 +28,7 @@ data class ProviderSpec(
                 chatUrl = "https://api.openai.com/v1/chat/completions",
                 voiceModel = s.openAiVoiceModel,
                 textModel = s.openAiTextModel,
+                transcriptionModel = "gpt-4o-mini-transcribe",
             )
         }
     }

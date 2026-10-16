@@ -10,6 +10,12 @@ sealed interface AgentEvent {
     data class AudioChunk(val pcm16: ByteArray) : AgentEvent
     data class ToolCall(val callId: String, val name: String, val args: JsonObject) : AgentEvent
     data object TurnDone : AgentEvent
+    /** A tool finished on the phone (for the UI). */
+    data class ToolDone(val name: String, val isError: Boolean) : AgentEvent
+    /** Informational: connecting, listening, fallback:<PROVIDER>. */
+    data class Status(val what: String) : AgentEvent
+    /** Server VAD heard the user start talking (barge-in). */
+    data object SpeechStarted : AgentEvent
     data class Failed(val reason: String, val retryable: Boolean) : AgentEvent
 }
 
@@ -20,6 +26,8 @@ interface VoiceTransport {
     val events: Flow<AgentEvent>
     suspend fun connect(instructions: String, tools: List<JsonObject>, history: List<Turn>)
     fun sendAudio(pcm16: ByteArray)
+    /** Push-to-talk: end of the user's turn. */
+    fun commitAudio()
     fun sendToolResult(callId: String, output: String)
     fun interrupt()
     fun close()
