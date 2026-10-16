@@ -42,6 +42,8 @@ fun MainSettingsScreen(
     onClickLanguage: () -> Unit,
     onClickLayouts: () -> Unit,
     onClickDictionaries: () -> Unit,
+    onClickAgent: () -> Unit = {},
+    onClickConnections: () -> Unit = {},
     onClickBack: () -> Unit,
 ) {
     SearchSettingsScreen(
@@ -54,6 +56,16 @@ fun MainSettingsScreen(
             Column(
                 Modifier.verticalScroll(rememberScrollState()).then(Modifier.padding(innerPadding))
             ) {
+                Preference(
+                    name = "Agent", // TODO string resource (he/en)
+                    onClick = onClickAgent,
+                    icon = R.drawable.ic_settings_preferences // TODO sparkle icon
+                ) { NextScreenIcon() }
+                Preference(
+                    name = "Connections", // TODO string resource (he/en)
+                    onClick = onClickConnections,
+                    icon = R.drawable.ic_settings_advanced
+                ) { NextScreenIcon() }
                 Preference(
                     name = stringResource(R.string.language_and_layouts_title),
                     description = enabledSubtypes.joinToString(", ") { it.displayName() },

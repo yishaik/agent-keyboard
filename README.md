@@ -1,3 +1,11 @@
+# Agent Keyboard
+
+HeliBoard fork with a built-in voice and text AI agent (Grok Voice 3.0 / OpenAI), screen awareness, and connected apps via self-hosted OpenConnector. See [docs/AGENT.md](docs/AGENT.md).
+
+Based on HeliBoard (GPL-3.0). Original README follows.
+
+---
+
 # HeliBoard
 HeliBoard is a privacy-conscious and customizable open-source keyboard, based on AOSP / OpenBoard.
 Does not use internet permission, and thus is 100% offline.

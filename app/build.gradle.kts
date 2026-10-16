@@ -10,7 +10,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "helium314.keyboard"
+        applicationId = "dev.yishaik.agentkeyboard" // was helium314.keyboard; separate id so it installs beside HeliBoard
         minSdk = 21
         targetSdk = 37
         versionCode = 4201
@@ -124,6 +124,10 @@ dependencies {
 
     // kotlin
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    // Agent
+    implementation("com.squareup.okhttp3:okhttp:4.12.0") // last line supporting minSdk 21
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("androidx.browser:browser:1.8.0") // Custom Tabs for OpenConnector console
 
     // compose
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")

@@ -1,0 +1,37 @@
+package helium314.keyboard.agent.tools
+
+import helium314.keyboard.agent.harness.Tool
+import helium314.keyboard.agent.harness.ToolContext
+import helium314.keyboard.agent.harness.ToolResult
+import helium314.keyboard.agent.screen.ScreenContextHolder
+import kotlinx.serialization.json.JsonObject
+
+/** Screen context comes from the assist session (AssistStructure + screenshot). */
+class ScreenTools(private val describeImage: suspend (ByteArray, String) -> String) {
+
+    val readScreen = object : Tool {
+        override val name = "read_screen"
+        override val description = "Get the visible text on the current screen (view tree), excluding password fields."
+        override val parameters = schema()
+        override val writes = false
+        override suspend fun run(args: JsonObject, ctx: ToolContext): ToolResult {
+            val snap = ScreenContextHolder.request() ?: return ToolResult("Screen not available (blocked app or assist disabled)", true)
+            return ToolResult(snap.text.take(8000))
+        }
+    }
+
+    val describeScreen = object : Tool {
+        override val name = "describe_screen"
+        override val description = "Look at a screenshot of the current screen and answer a question about it."
+        override val parameters = schema("question" to "string")
+        override val writes = false
+        override suspend fun run(args: JsonObject, ctx: ToolContext): ToolResult {
+            val snap = ScreenContextHolder.request() ?: return ToolResult("Screen not available", true)
+            val png = snap.screenshotPng ?: return ToolResult("No screenshot (FLAG_SECURE or disabled)", true)
+            val q = args["question"]?.toString() ?: "Describe the screen."
+            return ToolResult(describeImage(png, q))
+        }
+    }
+
+    fun all(): Array<Tool> = arrayOf(readScreen, describeScreen)
+}

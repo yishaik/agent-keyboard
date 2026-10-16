@@ -78,11 +78,19 @@ fun SettingsNavHost(
                 onClickLanguage = { navController.navigate(SettingsDestination.Languages) },
                 onClickLayouts = { navController.navigate(SettingsDestination.Layouts) },
                 onClickDictionaries = { navController.navigate(SettingsDestination.Dictionaries) },
+                onClickAgent = { navController.navigate(SettingsDestination.Agent) },
+                onClickConnections = { navController.navigate(SettingsDestination.Connections) },
                 onClickBack = ::goBack,
             )
         }
         composable(SettingsDestination.About) {
             AboutScreen(onClickBack = ::goBack)
+        }
+        composable(SettingsDestination.Agent) {
+            helium314.keyboard.agent.settings.AgentScreen(onClickBack = ::goBack)
+        }
+        composable(SettingsDestination.Connections) {
+            helium314.keyboard.agent.settings.ConnectionsScreen(onClickBack = ::goBack)
         }
         composable(SettingsDestination.TextCorrection) {
             TextCorrectionScreen(onClickBack = ::goBack)
@@ -147,6 +155,8 @@ fun SettingsNavHost(
 object SettingsDestination {
     const val Settings = "settings"
     const val About = "about"
+    const val Agent = "agent"
+    const val Connections = "connections"
     const val TextCorrection = "text_correction"
     const val Preferences = "preferences"
     const val Toolbar = "toolbar"
