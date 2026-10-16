@@ -1,11 +1,12 @@
 name: Build debug APK
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -14,26 +15,29 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Grant execute permission for gradlew and fetch-glide
+        run: chmod +x gradlew scripts/fetch-glide.sh
+
+      - name: Fetch glide typing library
+        run: bash scripts/fetch-glide.sh
 
       - name: Build with Gradle
-        run: ./gradlew assembleDebug
+        run: ./gradlew -Pagent.bundleGlide=true :app:assembleDebugNoMinify
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HeliBoard-debug
-          path: app/build/outputs/apk/debug/*-debug*.apk
+          name: AgentKeyboard-debug
+          path: app/build/outputs/apk/debugNoMinify/*.apk
 
       - name: Archive reports for failed job
+        if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
           name: reports
           path: '*/build/reports'
-        if: ${{ failure() }}
