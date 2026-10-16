@@ -13,8 +13,8 @@ android {
         applicationId = "dev.yishaik.agentkeyboard" // was helium314.keyboard; separate id so it installs beside HeliBoard
         minSdk = 21
         targetSdk = 37
-        versionCode = 4201
-        versionName = "4.2"
+        versionCode = 4202
+        versionName = "4.2.1"
         ndk {
             abiFilters.clear()
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))

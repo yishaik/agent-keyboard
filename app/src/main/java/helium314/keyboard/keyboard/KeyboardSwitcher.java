@@ -236,7 +236,7 @@ public final class KeyboardSwitcher {
             @NonNull final KeyboardSwitchState toggleState) {
         final int visibility = isImeSuppressedByHardwareKeyboard(settingsValues, toggleState) ? View.GONE : View.VISIBLE;
         final int stripVisibility = mLatinIME.hasSuggestionStripView()? View.VISIBLE : View.GONE;
-        mStripContainer.setVisibility(stripVisibility);
+        mStripContainer.setVisibility(mLatinIME.isAgentShowing() ? View.VISIBLE : stripVisibility);
         PointerTracker.switchTo(mKeyboardView);
         mKeyboardView.setVisibility(visibility);
         // The visibility of {@link #mKeyboardView} must be aligned with {@link #MainKeyboardFrame}.
@@ -248,7 +248,11 @@ public final class KeyboardSwitcher {
         mEmojiPalettesView.stopEmojiPalettes();
         mEmojiTabStripView.setVisibility(View.GONE);
         mClipboardStripScrollView.setVisibility(View.GONE);
-        mSuggestionStripView.setVisibility(stripVisibility);
+        if (mLatinIME.isAgentShowing()) {
+            mSuggestionStripView.setVisibility(View.GONE);
+        } else {
+            mSuggestionStripView.setVisibility(stripVisibility);
+        }
         mClipboardHistoryView.setVisibility(View.GONE);
         mClipboardHistoryView.stopClipboardHistory();
     }

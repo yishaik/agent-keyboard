@@ -9,7 +9,6 @@ import android.os.Looper
 import android.text.InputType
 import android.util.Base64
 import android.util.Log
-import android.view.View
 import android.view.inputmethod.EditorInfo
 import helium314.keyboard.agent.audio.AudioIO
 import helium314.keyboard.agent.connectors.OpenConnectorClient
@@ -22,6 +21,7 @@ import helium314.keyboard.agent.providers.ProviderSpec
 import helium314.keyboard.agent.providers.RealtimeVoiceTransport
 import helium314.keyboard.agent.providers.TokenBroker
 import helium314.keyboard.agent.screen.ScreenContextHolder
+import helium314.keyboard.agent.screen.ScreenSnapshot
 import helium314.keyboard.agent.settings.AgentSettings
 import helium314.keyboard.agent.settings.AgentSettingsStore
 import helium314.keyboard.agent.settings.InsertMode
@@ -44,9 +44,11 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -63,12 +65,12 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 /**
- * The agent inside the keyboard. Owns the agent strip (shown in place of the
+ * The agent inside the keyboard. Owns the conversation panel (shown in place of the
  * suggestion strip), the typed-request buffer, the voice session and audio, and the
  * [ToolContext] the tools run against. LatinIME forwards key events here first.
  *
  * Modes, like switching language: OFF (normal keyboard) -> TYPING (keys go to the
- * request line) -> WORKING -> PREVIEW / CONFIRM -> back to TYPING or OFF.
+ * composer) -> WORKING -> PREVIEW / CONFIRM -> back to TYPING or OFF.
  * VOICE runs beside any of them.
  */
 class AgentController(private val ime: LatinIME) : ToolContext {
@@ -91,9 +93,14 @@ class AgentController(private val ime: LatinIME) : ToolContext {
     private var mode = Mode.OFF
     private val buffer = StringBuilder()
     private var answer = StringBuilder()
+    private val log = ConversationLog()
     private var pending: CompletableDeferred<Boolean>? = null
     private var voiceOn = false
     private var session: AgentSession? = null
+    private var lastSnap: ScreenSnapshot? = null
+    private var screenStatus = ""
+    private var seeing = false
+    private var captureJob: Job? = null
 
     private val registry = ToolRegistry { settings }.apply {
         register(*FieldTools { ime.currentInputConnection.takeUnless { isPasswordField() } }.all())
@@ -154,6 +161,7 @@ class AgentController(private val ime: LatinIME) : ToolContext {
     fun onStartInputView(editorInfo: EditorInfo?) {
         // A new field ends any request bound to the previous one.
         if (mode == Mode.PREVIEW || mode == Mode.CONFIRM) resolvePending(false)
+        if (strip?.isAttachedToWindow == false) strip = null
         if (mode != Mode.OFF && isPasswordField()) exit()
         else if (mode != Mode.OFF || voiceOn) render()
     }
@@ -162,8 +170,13 @@ class AgentController(private val ime: LatinIME) : ToolContext {
         resolvePending(false)
         stopVoice()
         session?.close(); session = null
+        captureJob?.cancel(); captureJob = null
         mode = Mode.OFF
         buffer.clear()
+        log.clear()
+        lastSnap = null
+        seeing = false
+        screenStatus = ""
     }
 
     fun onDestroy() {
@@ -179,6 +192,7 @@ class AgentController(private val ime: LatinIME) : ToolContext {
             if (!checkReady()) return
             mode = Mode.TYPING
             render()
+            beginScreenCapture()
         } else exit()
     }
 
@@ -187,17 +201,31 @@ class AgentController(private val ime: LatinIME) : ToolContext {
         if (text.isEmpty()) return
         buffer.clear()
         answer = StringBuilder()
+        log.addUser(text)
+        log.startAssistant()
         mode = Mode.WORKING
         render()
-        sessionOrNew().sendText(text, fieldHint())
+        scope.launch {
+            waitForCapture()
+            if (lastSnap == null && settings.screenMode != ScreenMode.OFF) {
+                beginScreenCapture()
+                waitForCapture()
+            }
+            sessionOrNew().sendText(text, fieldHint(), attachedScreenText())
+        }
     }
 
     private fun exit() {
         resolvePending(false)
         session?.cancel()
         stopVoice()
+        captureJob?.cancel(); captureJob = null
         mode = Mode.OFF
         buffer.clear()
+        log.clear()
+        lastSnap = null
+        seeing = false
+        screenStatus = ""
         ime.showAgentStrip(null)
     }
 
@@ -215,7 +243,11 @@ class AgentController(private val ime: LatinIME) : ToolContext {
         voiceOn = true
         answer = StringBuilder()
         render(status = ime.getString(R.string.agent_connecting))
-        sessionOrNew().startVoice(fieldLanguage ?: "en", fieldHint())
+        beginScreenCapture()
+        scope.launch {
+            waitForCapture()
+            sessionOrNew().startVoice(fieldLanguage ?: "en", fieldHint(), attachedScreenText())
+        }
         if (settings.turnTaking == TurnTaking.VAD) startCapture()
         startLevelMeter()
     }
@@ -262,15 +294,25 @@ class AgentController(private val ime: LatinIME) : ToolContext {
 
     private fun onAgentEvent(e: AgentEvent) {
         when (e) {
-            is AgentEvent.TextDelta -> { answer.append(e.text); if (mode == Mode.WORKING) render() }
+            is AgentEvent.TextDelta -> {
+                answer.append(e.text)
+                log.appendAssistant(e.text)
+                if (mode == Mode.WORKING) render()
+            }
             is AgentEvent.TranscriptDelta -> {
-                if (e.fromUser) answer = StringBuilder("\u201C${e.text.trim()}\u201D ")
-                else answer.append(e.text)
+                if (e.fromUser) {
+                    answer = StringBuilder("\u201C${e.text.trim()}\u201D ")
+                    log.replaceLastUser(e.text)
+                    log.startAssistant()
+                } else {
+                    answer.append(e.text)
+                    log.appendAssistant(e.text)
+                }
                 if (mode == Mode.OFF || mode == Mode.WORKING || mode == Mode.MESSAGE || mode == Mode.TYPING) render()
             }
             is AgentEvent.AudioChunk -> if (settings.spokenReply != SpokenReply.NEVER) audio.play(e.pcm16)
             is AgentEvent.SpeechStarted -> if (settings.bargeIn) { audio.flushPlayback(); session?.interrupt() }
-            is AgentEvent.ToolCall -> {}
+            is AgentEvent.ToolCall -> render(status = ime.getString(R.string.agent_tool_running, e.name))
             is AgentEvent.ToolDone -> {}
             is AgentEvent.Status -> when {
                 e.what == "ready" -> if (voiceOn) render(status = ime.getString(R.string.agent_listening))
@@ -279,7 +321,6 @@ class AgentController(private val ime: LatinIME) : ToolContext {
             }
             is AgentEvent.Failed -> error(e.reason)
             AgentEvent.TurnDone -> if (mode == Mode.WORKING) {
-                // Answer with nothing inserted: leave it on the strip; next key press starts a new request.
                 mode = if (answer.isBlank()) Mode.TYPING else Mode.MESSAGE
                 render()
             }
@@ -308,7 +349,9 @@ class AgentController(private val ime: LatinIME) : ToolContext {
         pending = d
         mode = Mode.PREVIEW
         strip().apply {
-            setText(text)
+            setStatus(screenStatus.ifBlank { defaultScreenStatus() }, seeing)
+            setTranscript(log.snapshot(), ime.getString(R.string.agent_you), ime.getString(R.string.agent_label))
+            setComposer(text)
             setButtons(
                 AgentStripView.Action(R.string.agent_insert, primary = true) { resolvePending(true) },
                 AgentStripView.Action(R.string.agent_cancel) { resolvePending(false) },
@@ -316,7 +359,6 @@ class AgentController(private val ime: LatinIME) : ToolContext {
         }
         val ok = d.await()
         mode = if (voiceOn) Mode.MESSAGE else Mode.TYPING
-        answer = StringBuilder()
         render()
         ok
     }
@@ -327,7 +369,9 @@ class AgentController(private val ime: LatinIME) : ToolContext {
         val previous = mode
         mode = Mode.CONFIRM
         strip().apply {
-            setText(ime.getString(R.string.agent_confirm_run, title) + "  " + detail.take(200))
+            setStatus(screenStatus.ifBlank { defaultScreenStatus() }, seeing)
+            setTranscript(log.snapshot(), ime.getString(R.string.agent_you), ime.getString(R.string.agent_label))
+            setComposer(ime.getString(R.string.agent_confirm_run, title) + "  " + detail.take(200))
             setButtons(
                 AgentStripView.Action(R.string.agent_allow, primary = true) { resolvePending(true) },
                 AgentStripView.Action(R.string.agent_deny) { resolvePending(false) },
@@ -348,11 +392,21 @@ class AgentController(private val ime: LatinIME) : ToolContext {
 
     private fun render(status: String? = null) {
         val s = strip()
+        s.setStatus(screenStatus.ifBlank { defaultScreenStatus() }, seeing)
+        s.setTranscript(log.snapshot(), ime.getString(R.string.agent_you), ime.getString(R.string.agent_label))
         when (mode) {
-            Mode.TYPING -> return renderTyping()
-            Mode.WORKING -> s.setText(answer.ifEmpty { status ?: ime.getString(R.string.agent_thinking) }, italic = answer.isEmpty())
-            Mode.MESSAGE -> s.setText(answer)
-            Mode.OFF -> s.setText(answer.ifEmpty { status ?: ime.getString(R.string.agent_listening) }, italic = answer.isEmpty())
+            Mode.TYPING -> s.setComposer(buffer, hint = ime.getString(R.string.agent_hint))
+            Mode.WORKING -> s.setComposer(
+                "",
+                hint = status ?: if (answer.isEmpty()) ime.getString(R.string.agent_thinking) else "",
+                italic = true,
+            )
+            Mode.MESSAGE -> s.setComposer("", hint = ime.getString(R.string.agent_hint))
+            Mode.OFF -> s.setComposer(
+                "",
+                hint = status ?: ime.getString(R.string.agent_listening),
+                italic = true,
+            )
             Mode.PREVIEW, Mode.CONFIRM -> return
         }
         s.setButtons(*stripButtons())
@@ -360,9 +414,7 @@ class AgentController(private val ime: LatinIME) : ToolContext {
 
     private fun renderTyping() {
         if (mode == Mode.MESSAGE) mode = Mode.TYPING
-        val s = strip()
-        s.setText(buffer, hint = ime.getString(R.string.agent_hint))
-        s.setButtons(*stripButtons())
+        render()
     }
 
     private fun stripButtons(): Array<AgentStripView.Button> = buildList {
@@ -383,8 +435,8 @@ class AgentController(private val ime: LatinIME) : ToolContext {
     private fun message(text: String) {
         if (mode == Mode.OFF && !voiceOn) mode = Mode.MESSAGE
         answer = StringBuilder(text)
-        strip().setText(text)
-        strip().setButtons(AgentStripView.Action(R.string.agent_exit) { exit() })
+        log.setAssistant(text)
+        render()
     }
 
     private fun error(reason: String) {
@@ -417,8 +469,73 @@ class AgentController(private val ime: LatinIME) : ToolContext {
     private fun fieldHint(): String? {
         val ei = ime.currentInputEditorInfo ?: return null
         val parts = listOfNotNull(ei.hintText?.toString()?.takeIf { it.isNotBlank() }, ei.label?.toString()?.takeIf { it.isNotBlank() })
-        val screen = if (settings.screenMode == ScreenMode.ALWAYS_ATTACH) " (call read_screen first for context)" else ""
-        return (parts.joinToString(" / ").ifBlank { null }?.plus(screen)) ?: screen.ifBlank { null }
+        return parts.joinToString(" / ").ifBlank { null }
+    }
+
+    private fun beginScreenCapture() {
+        if (settings.screenMode == ScreenMode.OFF) {
+            lastSnap = null
+            seeing = false
+            screenStatus = ime.getString(R.string.agent_screen_off)
+            if (isShowing) render()
+            return
+        }
+        seeing = false
+        screenStatus = ime.getString(R.string.agent_looking)
+        if (isShowing) render()
+        captureJob?.cancel()
+        captureJob = scope.launch {
+            val snap = ScreenContextHolder.request(screenshot = settings.allowScreenshot)
+            lastSnap = snap
+            applyScreenStatus(snap)
+            if (isShowing) render()
+        }
+    }
+
+    private suspend fun waitForCapture() {
+        val job = captureJob ?: return
+        withTimeoutOrNull(1800) { job.join() }
+    }
+
+    private fun applyScreenStatus(snap: ScreenSnapshot?) {
+        when {
+            !ScreenContextHolder.isAssistantReady -> {
+                seeing = false
+                screenStatus = ime.getString(R.string.agent_no_screen)
+            }
+            snap == null || (snap.text.isBlank() && snap.screenshotPng == null) -> {
+                seeing = false
+                screenStatus = ime.getString(R.string.agent_screen_empty)
+            }
+            else -> {
+                seeing = true
+                screenStatus = ime.getString(R.string.agent_seeing, appLabel(snap.packageName ?: packageName))
+            }
+        }
+    }
+
+    private fun defaultScreenStatus(): String = when {
+        settings.screenMode == ScreenMode.OFF -> ime.getString(R.string.agent_screen_off)
+        !ScreenContextHolder.isAssistantReady -> ime.getString(R.string.agent_no_screen)
+        else -> ime.getString(R.string.agent_looking)
+    }
+
+    private fun attachedScreenText(): String? {
+        if (settings.screenMode == ScreenMode.OFF) return null
+        val t = lastSnap?.text?.trim().orEmpty()
+        if (t.isEmpty()) return null
+        val cap = if (settings.screenMode == ScreenMode.ALWAYS_ATTACH) 4000 else 2000
+        return t.take(cap)
+    }
+
+    private fun appLabel(pkg: String?): String {
+        if (pkg.isNullOrBlank()) return ime.getString(R.string.agent_this_app)
+        return try {
+            val pm = ime.packageManager
+            pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+        } catch (_: Exception) {
+            pkg.substringAfterLast('.')
+        }
     }
 
     /** Write-looking connector actions ask first (unless the user set a policy for run_action). */

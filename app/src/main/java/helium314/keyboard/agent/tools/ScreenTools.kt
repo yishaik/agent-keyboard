@@ -16,7 +16,7 @@ class ScreenTools(private val describeImage: suspend (ByteArray, String) -> Stri
         override val parameters = schema()
         override val writes = false
         override suspend fun run(args: JsonObject, ctx: ToolContext): ToolResult {
-            val snap = ScreenContextHolder.request() ?: return ToolResult("Screen not available: set Agent Keyboard as the default digital assistant app, or this app is blocked in settings", true)
+            val snap = ScreenContextHolder.request(screenshot = false) ?: return ToolResult("Screen not available: set Agent Keyboard as the default digital assistant app, or this app is blocked in settings", true)
             return ToolResult(snap.text.take(8000))
         }
     }
@@ -27,7 +27,7 @@ class ScreenTools(private val describeImage: suspend (ByteArray, String) -> Stri
         override val parameters = schema("question" to "string")
         override val writes = false
         override suspend fun run(args: JsonObject, ctx: ToolContext): ToolResult {
-            val snap = ScreenContextHolder.request() ?: return ToolResult("Screen not available", true)
+            val snap = ScreenContextHolder.request(screenshot = true) ?: return ToolResult("Screen not available", true)
             val png = snap.screenshotPng ?: return ToolResult("No screenshot (FLAG_SECURE or disabled)", true)
             val q = args["question"]?.jsonPrimitive?.content ?: "Describe the screen."
             return ToolResult(describeImage(png, q))

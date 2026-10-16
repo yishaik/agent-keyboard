@@ -2,6 +2,14 @@
 <resources>
     <string name="agent">סוכן</string>
     <string name="agent_hint">מה לעשות?</string>
+    <string name="agent_you">אתה</string>
+    <string name="agent_label">סוכן</string>
+    <string name="agent_seeing">רואה את %s</string>
+    <string name="agent_no_screen">לא רואה את המסך — הגדר את Agent Keyboard כעוזר הדיגיטלי</string>
+    <string name="agent_screen_empty">המסך נקרא, בלי טקסט גלוי</string>
+    <string name="agent_screen_off">קריאת מסך כבויה</string>
+    <string name="agent_looking">מסתכל על המסך…</string>
+    <string name="agent_this_app">האפליקציה</string>
     <string name="agent_send">שלח</string>
     <string name="agent_insert">הכנס</string>
     <string name="agent_cancel">ביטול</string>

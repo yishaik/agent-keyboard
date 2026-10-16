@@ -1,9 +1,10 @@
 package helium314.keyboard.agent.screen
 
-import android.os.Build
-import android.os.Bundle
 import android.service.voice.VoiceInteractionSession
+import android.os.Bundle
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 
 data class ScreenSnapshot(val packageName: String?, val text: String, val screenshotPng: ByteArray?)
@@ -17,13 +18,24 @@ object ScreenContextHolder {
     @Volatile internal var service: AgentAssistService? = null
     @Volatile private var pending: CompletableDeferred<ScreenSnapshot?>? = null
     @Volatile var blockedPackages: Set<String> = emptySet()
+    private val gate = Mutex()
 
-    suspend fun request(timeoutMs: Long = 2500): ScreenSnapshot? {
-        val svc = service ?: return null // app is not the default assistant
+    /** True once [AgentAssistService.onReady] has run (app is the default assistant). */
+    val isAssistantReady: Boolean get() = service != null
+
+    suspend fun request(timeoutMs: Long = 1600, screenshot: Boolean = true): ScreenSnapshot? = gate.withLock {
+        val svc = service ?: return@withLock null // app is not the default assistant
         val d = CompletableDeferred<ScreenSnapshot?>().also { pending = it }
-        val flags = VoiceInteractionSession.SHOW_WITH_ASSIST or VoiceInteractionSession.SHOW_WITH_SCREENSHOT
-        svc.showSession(Bundle().apply { putBoolean(AgentAssistService.EXTRA_SILENT, true) }, flags)
-        return withTimeoutOrNull(timeoutMs) { d.await() }
+        try {
+            var flags = VoiceInteractionSession.SHOW_WITH_ASSIST
+            if (screenshot) flags = flags or VoiceInteractionSession.SHOW_WITH_SCREENSHOT
+            svc.showSession(Bundle().apply { putBoolean(AgentAssistService.EXTRA_SILENT, true) }, flags)
+            withTimeoutOrNull(timeoutMs) { d.await() }
+        } catch (_: Throwable) {
+            null
+        } finally {
+            if (pending === d) pending = null
+        }
     }
 
     internal fun deliver(s: ScreenSnapshot?) {

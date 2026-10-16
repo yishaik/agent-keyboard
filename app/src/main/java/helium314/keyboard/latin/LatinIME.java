@@ -26,7 +26,9 @@ import android.util.PrintWriterPrinter;
 import android.util.Printer;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.FrameLayout;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InlineSuggestion;
@@ -1305,7 +1307,9 @@ public class LatinIME extends InputMethodService implements
             final boolean noFullscreen = (ei.imeOptions & EditorInfo.IME_FLAG_NO_FULLSCREEN) != 0;
             if (noExtractUi || noFullscreen) return false;
             if (mKeyboardSwitcher.getVisibleKeyboardView() == null || mSuggestionStripView == null) return false;
-            final int usedHeight = mKeyboardSwitcher.getVisibleKeyboardView().getHeight() + mSuggestionStripView.getHeight();
+            final View strip = mKeyboardSwitcher.getStripContainer();
+            final int stripHeight = strip != null ? strip.getHeight() : mSuggestionStripView.getHeight();
+            final int usedHeight = mKeyboardSwitcher.getVisibleKeyboardView().getHeight() + stripHeight;
             final int availableHeight = getResources().getDisplayMetrics().heightPixels;
             return usedHeight > availableHeight * 0.6; // if we have less than 40% available, use fullscreen mode
         }
@@ -1622,19 +1626,55 @@ public class LatinIME extends InputMethodService implements
         mDictionaryFacilitator.removeWord(word);
     }
 
-    /** Agent Keyboard: show the agent strip in place of suggestions, or null to give the strip back. */
+    /** Agent Keyboard: true while the conversation panel owns the suggestion strip. */
+    public boolean isAgentShowing() {
+        return mAgentController != null && mAgentController.isShowing();
+    }
+
+    private static final String AGENT_STRIP_TAG = "agent_strip";
+
+    /** Agent Keyboard: show the conversation panel in the strip container, or null to give the strip back. */
     public void showAgentStrip(@Nullable final View view) {
-        if (!hasSuggestionStripView()) return;
+        final FrameLayout strip = mKeyboardSwitcher.getStripContainer();
+        if (strip == null) return;
+        final View existing = strip.findViewWithTag(AGENT_STRIP_TAG);
         if (view == null) {
+            if (existing != null) strip.removeView(existing);
+            setStripContainerHeight(strip, getResources().getDimensionPixelSize(R.dimen.config_suggestions_strip_height));
+            if (mSuggestionStripView != null) mSuggestionStripView.setVisibility(View.VISIBLE);
             removeExternalSuggestions();
             return;
         }
-        if (view.getParent() != null) {
-            if (view.getVisibility() != View.VISIBLE) view.setVisibility(View.VISIBLE);
-            return; // already shown
+        view.setTag(AGENT_STRIP_TAG);
+        if (mSuggestionStripView != null) {
+            mSuggestionStripView.setVisibility(View.GONE);
+            mSuggestionStripView.setToolbarVisibility(false);
         }
-        mSuggestionStripView.setExternalSuggestionView(view, false);
-        mSuggestionStripView.setToolbarVisibility(false);
+        final View emoji = strip.findViewById(R.id.emoji_tab_strip);
+        if (emoji != null) emoji.setVisibility(View.GONE);
+        final View clip = strip.findViewById(R.id.clipboard_strip_scroll_view);
+        if (clip != null) clip.setVisibility(View.GONE);
+        if (view.getParent() != strip) {
+            if (view.getParent() instanceof ViewGroup) {
+                ((ViewGroup) view.getParent()).removeView(view);
+            }
+            if (existing != null && existing != view) strip.removeView(existing);
+            strip.addView(view, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
+        view.setVisibility(View.VISIBLE);
+        strip.setVisibility(View.VISIBLE);
+        setStripContainerHeight(strip, getResources().getDimensionPixelSize(R.dimen.config_agent_panel_height));
+    }
+
+    private void setStripContainerHeight(final View strip, final int heightPx) {
+        final ViewGroup.LayoutParams lp = strip.getLayoutParams();
+        if (lp == null) return;
+        if (lp.height == heightPx) return;
+        lp.height = heightPx;
+        strip.setLayoutParams(lp);
+        if (mInputView != null) mInputView.requestLayout();
+        KtxKt.updateSoftInputWindowLayoutParameters(this, mInputView);
     }
 
     /** Agent Keyboard: a glide-typed word; true if the agent line took it. */

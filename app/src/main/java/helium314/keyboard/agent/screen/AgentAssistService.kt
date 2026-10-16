@@ -1,11 +1,15 @@
 package helium314.keyboard.agent.screen
 
+import android.app.assist.AssistContent
 import android.app.assist.AssistStructure
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.speech.RecognitionService
 import android.service.voice.VoiceInteractionService
 import android.service.voice.VoiceInteractionSession
@@ -36,28 +40,59 @@ class AgentAssistSession(ctx: Context) : VoiceInteractionSession(ctx) {
     private var png: ByteArray? = null
     private var gotText = false
     private var gotShot = false
+    private var delivered = false
+    private var shownAt = 0L
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onShow(args: Bundle?, showFlags: Int) {
         super.onShow(args, showFlags)
         if (Build.VERSION.SDK_INT >= 23) setUiEnabled(false)
+        shownAt = SystemClock.uptimeMillis()
+        handler.postDelayed({ maybeDeliver() }, AssistDelivery.TEXT_GRACE_MS)
+        handler.postDelayed({ maybeDeliver() }, AssistDelivery.GIVE_UP_MS)
         // TODO: when launched by long-press home (not silent), show a full voice UI instead.
+    }
+
+    override fun onHide() {
+        handler.removeCallbacksAndMessages(null)
+        if (!delivered) deliverOnce()
+        super.onHide()
     }
 
     @RequiresApi(29)
     override fun onHandleAssist(state: AssistState) {
-        val structure = state.assistStructure
-        pkg = structure?.activityComponent?.packageName
-        text = structure?.let { flatten(it) } ?: ""
-        gotText = true; maybeDeliver()
+        applyStructure(state.assistStructure)
+    }
+
+    @Deprecated("Use onHandleAssist(AssistState)")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun onHandleAssist(data: Bundle?, structure: AssistStructure?, content: AssistContent?) {
+        applyStructure(structure)
     }
 
     override fun onHandleScreenshot(screenshot: Bitmap?) {
         png = screenshot?.let { b -> ByteArrayOutputStream().also { b.compress(Bitmap.CompressFormat.PNG, 90, it) }.toByteArray() }
-        gotShot = true; maybeDeliver()
+        gotShot = true
+        maybeDeliver()
+    }
+
+    private fun applyStructure(structure: AssistStructure?) {
+        pkg = structure?.activityComponent?.packageName
+        text = structure?.let { flatten(it) } ?: ""
+        gotText = true
+        maybeDeliver()
     }
 
     private fun maybeDeliver() {
-        if (!gotText || !gotShot) return
+        val elapsed = if (shownAt == 0L) 0L else SystemClock.uptimeMillis() - shownAt
+        if (!AssistDelivery.ready(gotText, gotShot, elapsed)) return
+        deliverOnce()
+    }
+
+    private fun deliverOnce() {
+        if (delivered) return
+        delivered = true
+        handler.removeCallbacksAndMessages(null)
         ScreenContextHolder.deliver(ScreenSnapshot(pkg, text.orEmpty(), png))
         hide()
     }

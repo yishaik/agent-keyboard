@@ -31,11 +31,11 @@ class AgentSession(
 
     // ---------- voice ----------
 
-    fun startVoice(language: String, fieldHint: String?) {
-        connectVoice(settings().voiceProviderFor(language), fieldHint, failedOver = false)
+    fun startVoice(language: String, fieldHint: String?, screenText: String? = null) {
+        connectVoice(settings().voiceProviderFor(language), fieldHint, screenText, failedOver = false)
     }
 
-    private fun connectVoice(p: Provider, fieldHint: String?, failedOver: Boolean) {
+    private fun connectVoice(p: Provider, fieldHint: String?, screenText: String?, failedOver: Boolean) {
         val s = settings()
         provider = p
         val t = voiceFactory(p).also { voice = it }
@@ -53,7 +53,7 @@ class AgentSession(
                             if (e.retryable && s.autoFallback && !failedOver && voice === t) {
                                 t.close()
                                 onEvent(AgentEvent.Status("fallback:${other(p).name}"))
-                                connectVoice(other(p), fieldHint, failedOver = true)
+                                connectVoice(other(p), fieldHint, screenText, failedOver = true)
                             } else onEvent(e)
                         }
                         else -> onEvent(e)
@@ -61,11 +61,11 @@ class AgentSession(
                 }
             }
             runCatching {
-                t.connect(PromptBuilder.build(s, ctx.packageName, ctx.fieldLanguage, fieldHint), registry.definitions(), history)
+                t.connect(PromptBuilder.build(s, ctx.packageName, ctx.fieldLanguage, fieldHint, screenText), registry.definitions(), history)
             }.onFailure {
                 if (s.autoFallback && !failedOver) {
                     t.close()
-                    connectVoice(other(p), fieldHint, failedOver = true)
+                    connectVoice(other(p), fieldHint, screenText, failedOver = true)
                 } else onEvent(AgentEvent.Failed(it.message ?: "connect failed", false))
             }
         }
@@ -84,23 +84,23 @@ class AgentSession(
     // ---------- text ----------
 
     /** Typed request. Runs the chat + tool loop until the model stops calling tools. */
-    fun sendText(text: String, fieldHint: String?) {
+    fun sendText(text: String, fieldHint: String?, screenText: String? = null) {
         textJob?.cancel()
         val s = settings()
         textJob = scope.launch {
             val first = s.textProvider
-            val ok = runTextWith(first, text, fieldHint)
+            val ok = runTextWith(first, text, fieldHint, screenText)
             if (!ok && s.autoFallback) {
                 onEvent(AgentEvent.Status("fallback:${other(first).name}"))
-                runTextWith(other(first), text, fieldHint)
+                runTextWith(other(first), text, fieldHint, screenText)
             }
         }
     }
 
-    private suspend fun runTextWith(p: Provider, text: String, fieldHint: String?): Boolean {
+    private suspend fun runTextWith(p: Provider, text: String, fieldHint: String?, screenText: String?): Boolean {
         val s = settings()
         val t = textFactory(p)
-        val prompt = PromptBuilder.build(s, ctx.packageName, ctx.fieldLanguage, fieldHint)
+        val prompt = PromptBuilder.build(s, ctx.packageName, ctx.fieldLanguage, fieldHint, screenText)
         var flow: Flow<AgentEvent>? = t.run(prompt, registry.definitions(), history.toList(), text)
         record(text, fromUser = true)
         var rounds = 0

@@ -4,23 +4,25 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
 import android.text.TextUtils
+import android.text.style.StyleSpan
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.common.ColorType
 import helium314.keyboard.latin.settings.Settings
 
 /**
- * What the agent shows in place of the suggestion strip. One line, like the strip:
- * sparkle | text (typed request, status, streamed answer, or draft) | action buttons.
- * Direction follows the text, so Hebrew drafts read right-to-left.
+ * Conversation panel above the keys: screen-seeing status, transcript, composer, actions.
+ * Replaces the one-line suggestion strip while the agent is on.
  */
 @SuppressLint("ViewConstructor")
 class AgentStripView(context: Context) : LinearLayout(context) {
@@ -36,52 +38,110 @@ class AgentStripView(context: Context) : LinearLayout(context) {
     private val textColor = colors.get(ColorType.KEY_TEXT)
     private val accent = colors.get(ColorType.ACTION_KEY_BACKGROUND)
     private val hintColor = colors.get(ColorType.SUGGESTION_TYPED_WORD)
+    private val stripBg = colors.get(ColorType.STRIP_BACKGROUND)
 
     private val sparkle = ImageView(context).apply {
         setImageResource(R.drawable.ic_agent)
         setColorFilter(accent)
-        val p = dp(8)
+        val p = dp(6)
         setPadding(p, p, p, p)
     }
-    private val text = TextView(context).apply {
-        setTextColor(textColor)
-        setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+    private val status = TextView(context).apply {
+        setTextColor(hintColor)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
         isSingleLine = true
-        ellipsize = null
+        ellipsize = TextUtils.TruncateAt.END
         gravity = Gravity.CENTER_VERTICAL
         textDirection = View.TEXT_DIRECTION_FIRST_STRONG
         textAlignment = View.TEXT_ALIGNMENT_VIEW_START
     }
-    private val scroll = HorizontalScrollView(context).apply {
-        isHorizontalScrollBarEnabled = false
+    private val transcript = TextView(context).apply {
+        setTextColor(textColor)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+        setLineSpacing(dp(3).toFloat(), 1f)
+        gravity = Gravity.TOP or Gravity.START
+        textDirection = View.TEXT_DIRECTION_FIRST_STRONG
+        textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+        val p = dp(8)
+        setPadding(p, dp(4), p, dp(4))
+    }
+    private val scroll = ScrollView(context).apply {
         isFillViewport = true
-        addView(text, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT))
+        isVerticalScrollBarEnabled = true
+        descendantFocusability = FOCUS_BLOCK_DESCENDANTS
+        addView(transcript, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+    }
+    private val composer = TextView(context).apply {
+        setTextColor(textColor)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+        isSingleLine = true
+        ellipsize = TextUtils.TruncateAt.END
+        gravity = Gravity.CENTER_VERTICAL
+        textDirection = View.TEXT_DIRECTION_FIRST_STRONG
+        textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+        val p = dp(8)
+        setPadding(p, 0, p, 0)
     }
     private val buttons = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
 
     init {
-        orientation = HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
+        orientation = VERTICAL
         layoutDirection = View.LAYOUT_DIRECTION_LOCALE
-        addView(sparkle, LayoutParams(dp(40), LayoutParams.MATCH_PARENT))
-        addView(scroll, LayoutParams(0, LayoutParams.MATCH_PARENT, 1f))
-        addView(buttons, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT))
+        descendantFocusability = FOCUS_BLOCK_DESCENDANTS
+        setBackgroundColor(stripBg)
+        val statusRow = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(sparkle, LayoutParams(dp(32), dp(32)))
+            addView(status, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
+        }
+        val composerRow = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(composer, LayoutParams(0, dp(40), 1f))
+            addView(buttons, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT))
+        }
+        addView(statusRow, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+        addView(hairline(), LayoutParams(LayoutParams.MATCH_PARENT, dp(1)))
+        addView(scroll, LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f))
+        addView(hairline(), LayoutParams(LayoutParams.MATCH_PARENT, dp(1)))
+        addView(composerRow, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
     }
 
-    /** Show [value]; when blank, show [hint] greyed out. Keeps the end of long text visible. */
-    fun setText(value: CharSequence, hint: CharSequence? = null, italic: Boolean = false) {
-        if (value.isEmpty() && hint != null) {
-            text.text = hint; text.setTextColor(hintColor)
-        } else {
-            text.text = value; text.setTextColor(textColor)
-        }
-        text.setTypeface(null, if (italic) Typeface.ITALIC else Typeface.NORMAL)
-        text.ellipsize = if (italic) TextUtils.TruncateAt.END else null
-        val rtl = value.firstOrNull { Character.getDirectionality(it).let { d ->
-            d == Character.DIRECTIONALITY_RIGHT_TO_LEFT || d == Character.DIRECTIONALITY_LEFT_TO_RIGHT } }
-            ?.let { Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT } ?: false
-        scroll.post { scroll.fullScroll(if (rtl) View.FOCUS_LEFT else View.FOCUS_RIGHT) }
+    fun setStatus(value: CharSequence, seeing: Boolean) {
+        status.text = value
+        status.setTextColor(if (seeing) accent else hintColor)
     }
+
+    fun setTranscript(turns: List<ChatTurn>, youLabel: String, agentLabel: String) {
+        val body = SpannableStringBuilder()
+        turns.filter { it.text.isNotBlank() }.forEachIndexed { i, turn ->
+            if (i > 0) body.append('\n')
+            val label = if (turn.fromUser) youLabel else agentLabel
+            val start = body.length
+            body.append(label).append(": ")
+            body.setSpan(StyleSpan(Typeface.BOLD), start, body.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            body.append(turn.text)
+        }
+        transcript.text = body
+        scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
+    }
+
+    /** Composer line: typed request, status, or a draft to insert. */
+    fun setComposer(value: CharSequence, hint: CharSequence? = null, italic: Boolean = false) {
+        if (value.isEmpty() && hint != null) {
+            composer.text = hint
+            composer.setTextColor(hintColor)
+        } else {
+            composer.text = value
+            composer.setTextColor(textColor)
+        }
+        composer.setTypeface(null, if (italic) Typeface.ITALIC else Typeface.NORMAL)
+    }
+
+    /** Kept for call sites that still mean "the line the user is looking at". */
+    fun setText(value: CharSequence, hint: CharSequence? = null, italic: Boolean = false) =
+        setComposer(value, hint, italic)
 
     /** Sparkle pulses with mic level / activity (0..1). */
     fun setActivity(level: Float) {
@@ -119,6 +179,8 @@ class AgentStripView(context: Context) : LinearLayout(context) {
             }
         }
     }
+
+    private fun hairline(): View = View(context).apply { setBackgroundColor(hintColor); alpha = 0.35f }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 }

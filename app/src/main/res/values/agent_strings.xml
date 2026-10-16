@@ -3,6 +3,14 @@
     <!-- toolbar key (name must equal lowercase ToolbarKey.AGENT) -->
     <string name="agent" tools:keep="@string/agent">Agent</string>
     <string name="agent_hint">Ask the agent…</string>
+    <string name="agent_you">You</string>
+    <string name="agent_label">Agent</string>
+    <string name="agent_seeing">Seeing %s</string>
+    <string name="agent_no_screen">Can\'t see the screen — set Agent Keyboard as the default digital assistant</string>
+    <string name="agent_screen_empty">Screen captured, no readable text</string>
+    <string name="agent_screen_off">Screen reading is off</string>
+    <string name="agent_looking">Looking at the screen…</string>
+    <string name="agent_this_app">this app</string>
     <string name="agent_send">Send</string>
     <string name="agent_insert">Insert</string>
     <string name="agent_cancel">Cancel</string>
