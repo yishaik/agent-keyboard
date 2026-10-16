@@ -2338,6 +2338,12 @@ public final class InputLogic {
         if (TextUtils.isEmpty(batchInputText)) {
             return;
         }
+        // Agent Keyboard: glide typing goes into the agent line while typed agent mode is on
+        if (mLatinIME.onAgentGestureWord(batchInputText)) {
+            mWordComposer.reset();
+            mSpaceState = SpaceState.NONE;
+            return;
+        }
         mConnection.beginBatchEdit();
         if (SpaceState.PHANTOM == mSpaceState) {
             insertAutomaticSpaceIfOptionsAndTextAllow(settingsValues);

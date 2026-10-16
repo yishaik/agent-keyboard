@@ -35,4 +35,42 @@
     <string name="agent_test">Test</string>
     <string name="agent_test_ok">Works</string>
     <string name="agent_test_fail">Failed: %s</string>
+    <!-- agent settings rows -->
+    <string name="as_english_voice">English voice</string>
+    <string name="as_hebrew_voice">Hebrew voice</string>
+    <string name="as_insert_text">Insert text</string>
+    <string name="as_mic_tap">Mic tap</string>
+    <string name="as_screen_mode">Mode</string>
+    <string name="as_reply_language">Reply language</string>
+    <string name="as_spoken_reply">Spoken reply</string>
+    <string name="as_text_provider">Text provider</string>
+    <string name="as_turn_taking">Turn taking</string>
+    <string name="as_voice_provider">Voice provider</string>
+    <string name="as_actions">Actions &amp; permissions</string>
+    <string name="as_activation">Activation</string>
+    <string name="as_add_connection">Add connection</string>
+    <string name="as_agent_permissions">Agent permissions</string>
+    <string name="as_knowledge">Knowledge &amp; style</string>
+    <string name="as_language">Language</string>
+    <string name="as_my_connections">My connections</string>
+    <string name="as_privacy">Privacy &amp; cost</string>
+    <string name="as_providers">Providers</string>
+    <string name="as_screen_reading">Screen reading</string>
+    <string name="as_server">Server (self-hosted OpenConnector)</string>
+    <string name="as_allow_screenshots">Allow screenshots</string>
+    <string name="as_auto_fallback">Automatic fallback</string>
+    <string name="as_barge_in">Let me interrupt</string>
+    <string name="as_memory">Memory</string>
+    <string name="as_open_console">Open console</string>
+    <string name="as_password_note">Password fields are never read.</string>
+    <string name="as_perm_note">Reads allowed, writes ask.</string>
+    <string name="as_runtime_token">Runtime token (not the admin token)</string>
+    <string name="as_tap_test">Tap Test to load your connected accounts.</string>
+    <string name="as_about_me">About me</string>
+    <string name="as_history_days">Keep history (days)</string>
+    <string name="as_monthly_cap">Monthly cap, USD (0 = none)</string>
+    <string name="as_standing">Standing instructions</string>
+    <string name="as_broker_url">Token broker URL</string>
+    <string name="as_worker_url">Worker URL</string>
+    <string name="as_writing_style">Writing style (short / regular / formal)</string>
 </resources>

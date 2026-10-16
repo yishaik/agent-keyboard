@@ -1637,6 +1637,11 @@ public class LatinIME extends InputMethodService implements
         mSuggestionStripView.setToolbarVisibility(false);
     }
 
+    /** Agent Keyboard: a glide-typed word; true if the agent line took it. */
+    public boolean onAgentGestureWord(final String word) {
+        return mAgentController != null && mAgentController.onGestureWord(word);
+    }
+
     /** Agent Keyboard: hand over to the system voice-typing IME (normal dictation). */
     public void startDictation() {
         mRichImm.switchToShortcutIme(this);

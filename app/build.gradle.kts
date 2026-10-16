@@ -81,6 +81,11 @@ android {
     // -Pagent.prebuiltNative=true skips ndk-build and packages the prebuilt
     // libjni_latinime.so from app/prebuilt-jni (taken from the matching HeliBoard release).
     // Used where no NDK host build exists (e.g. linux-arm64 CI).
+    // -Pagent.bundleGlide=true (personal builds only): ship Google's glide typing library from
+    // app/glide-assets (see scripts/fetch-glide.sh); installed on first start by GlideInstaller.
+    if (project.findProperty("agent.bundleGlide")?.toString() == "true") {
+        sourceSets.getByName("main").assets.srcDirs("glide-assets")
+    }
     if (project.findProperty("agent.prebuiltNative")?.toString() == "true") {
         sourceSets.getByName("main").jniLibs.srcDirs("prebuilt-jni")
     } else {

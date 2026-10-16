@@ -33,4 +33,42 @@
     <string name="agent_test">בדיקה</string>
     <string name="agent_test_ok">עובד</string>
     <string name="agent_test_fail">נכשל: %s</string>
+    <!-- agent settings rows -->
+    <string name="as_english_voice">קול באנגלית</string>
+    <string name="as_hebrew_voice">קול בעברית</string>
+    <string name="as_insert_text">הכנסת טקסט</string>
+    <string name="as_mic_tap">הקשה על המיקרופון</string>
+    <string name="as_screen_mode">מצב</string>
+    <string name="as_reply_language">שפת תשובה</string>
+    <string name="as_spoken_reply">תשובה קולית</string>
+    <string name="as_text_provider">ספק טקסט</string>
+    <string name="as_turn_taking">חילופי תורות</string>
+    <string name="as_voice_provider">ספק קול</string>
+    <string name="as_actions">פעולות והרשאות</string>
+    <string name="as_activation">הפעלה</string>
+    <string name="as_add_connection">הוספת חיבור</string>
+    <string name="as_agent_permissions">הרשאות הסוכן</string>
+    <string name="as_knowledge">ידע וסגנון</string>
+    <string name="as_language">שפה</string>
+    <string name="as_my_connections">החיבורים שלי</string>
+    <string name="as_privacy">פרטיות ועלות</string>
+    <string name="as_providers">ספקים</string>
+    <string name="as_screen_reading">קריאת מסך</string>
+    <string name="as_server">שרת (OpenConnector שלך)</string>
+    <string name="as_allow_screenshots">לאפשר צילומי מסך</string>
+    <string name="as_auto_fallback">מעבר אוטומטי לספק השני</string>
+    <string name="as_barge_in">לאפשר לי לקטוע</string>
+    <string name="as_memory">זיכרון</string>
+    <string name="as_open_console">פתיחת הקונסולה</string>
+    <string name="as_password_note">שדות סיסמה לעולם לא נקראים.</string>
+    <string name="as_perm_note">קריאה מותרת, כתיבה מבקשת אישור.</string>
+    <string name="as_runtime_token">Runtime token (לא ה־admin token)</string>
+    <string name="as_tap_test">הקש בדיקה כדי לטעון את החשבונות המחוברים.</string>
+    <string name="as_about_me">עליי</string>
+    <string name="as_history_days">שמירת היסטוריה (ימים)</string>
+    <string name="as_monthly_cap">תקרה חודשית בדולר (0 = ללא)</string>
+    <string name="as_standing">הוראות קבועות</string>
+    <string name="as_broker_url">כתובת Token broker</string>
+    <string name="as_worker_url">כתובת ה־Worker</string>
+    <string name="as_writing_style">סגנון כתיבה (short / regular / formal)</string>
 </resources>

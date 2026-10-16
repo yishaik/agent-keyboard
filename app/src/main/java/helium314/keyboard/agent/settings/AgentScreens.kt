@@ -65,46 +65,46 @@ fun AgentScreen(onClickBack: () -> Unit) {
     val s by store.state.collectAsState()
     var brokerToken by remember { mutableStateOf(secrets.brokerAppToken.orEmpty()) }
     AgentScaffold(stringResource(R.string.settings_screen_agent), onClickBack) {
-        Section("Providers")
-        ChoiceRow("Voice provider", s.voiceProvider, Provider.values()) { v -> store.update { it.copy(voiceProvider = v) } }
-        ChoiceRow("Text provider", s.textProvider, Provider.values()) { v -> store.update { it.copy(textProvider = v) } }
-        ChoiceRow("Hebrew voice", s.hebrewVoiceProvider ?: s.voiceProvider, Provider.values()) { v -> store.update { it.copy(hebrewVoiceProvider = v) } }
-        ChoiceRow("English voice", s.englishVoiceProvider ?: s.voiceProvider, Provider.values()) { v -> store.update { it.copy(englishVoiceProvider = v) } }
-        SwitchRow("Automatic fallback", s.autoFallback) { v -> store.update { it.copy(autoFallback = v) } }
-        TextRow("Token broker URL", s.tokenBrokerUrl, { v -> store.update { it.copy(tokenBrokerUrl = v.trim()) } })
+        Section(stringResource(R.string.as_providers))
+        ChoiceRow(stringResource(R.string.as_voice_provider), s.voiceProvider, Provider.values()) { v -> store.update { it.copy(voiceProvider = v) } }
+        ChoiceRow(stringResource(R.string.as_text_provider), s.textProvider, Provider.values()) { v -> store.update { it.copy(textProvider = v) } }
+        ChoiceRow(stringResource(R.string.as_hebrew_voice), s.hebrewVoiceProvider ?: s.voiceProvider, Provider.values()) { v -> store.update { it.copy(hebrewVoiceProvider = v) } }
+        ChoiceRow(stringResource(R.string.as_english_voice), s.englishVoiceProvider ?: s.voiceProvider, Provider.values()) { v -> store.update { it.copy(englishVoiceProvider = v) } }
+        SwitchRow(stringResource(R.string.as_auto_fallback), s.autoFallback) { v -> store.update { it.copy(autoFallback = v) } }
+        TextRow(stringResource(R.string.as_broker_url), s.tokenBrokerUrl, { v -> store.update { it.copy(tokenBrokerUrl = v.trim()) } })
         OutlinedTextField(brokerToken, { brokerToken = it; secrets.brokerAppToken = it.trim() },
             label = { Text(stringResource(R.string.agent_broker_token)) },
             visualTransformation = PasswordVisualTransformation(), singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp))
 
-        Section("Activation")
-        ChoiceRow("Mic tap", s.micTap, MicTapAction.values()) { v -> store.update { it.copy(micTap = v) } }
-        ChoiceRow("Turn taking", s.turnTaking, TurnTaking.values()) { v -> store.update { it.copy(turnTaking = v) } }
-        SwitchRow("Let me interrupt", s.bargeIn) { v -> store.update { it.copy(bargeIn = v) } }
-        ChoiceRow("Spoken reply", s.spokenReply, SpokenReply.values()) { v -> store.update { it.copy(spokenReply = v) } }
+        Section(stringResource(R.string.as_activation))
+        ChoiceRow(stringResource(R.string.as_mic_tap), s.micTap, MicTapAction.values()) { v -> store.update { it.copy(micTap = v) } }
+        ChoiceRow(stringResource(R.string.as_turn_taking), s.turnTaking, TurnTaking.values()) { v -> store.update { it.copy(turnTaking = v) } }
+        SwitchRow(stringResource(R.string.as_barge_in), s.bargeIn) { v -> store.update { it.copy(bargeIn = v) } }
+        ChoiceRow(stringResource(R.string.as_spoken_reply), s.spokenReply, SpokenReply.values()) { v -> store.update { it.copy(spokenReply = v) } }
 
-        Section("Screen reading")
-        ChoiceRow("Mode", s.screenMode, ScreenMode.values()) { v -> store.update { it.copy(screenMode = v) } }
-        SwitchRow("Allow screenshots", s.allowScreenshot) { v -> store.update { it.copy(allowScreenshot = v) } }
-        Text("Password fields are never read.", style = MaterialTheme.typography.bodySmall)
+        Section(stringResource(R.string.as_screen_reading))
+        ChoiceRow(stringResource(R.string.as_screen_mode), s.screenMode, ScreenMode.values()) { v -> store.update { it.copy(screenMode = v) } }
+        SwitchRow(stringResource(R.string.as_allow_screenshots), s.allowScreenshot) { v -> store.update { it.copy(allowScreenshot = v) } }
+        Text(stringResource(R.string.as_password_note), style = MaterialTheme.typography.bodySmall)
         // TODO: app picker for blockedPackages
 
-        Section("Actions & permissions")
-        ChoiceRow("Insert text", s.insertMode, InsertMode.values()) { v -> store.update { it.copy(insertMode = v) } }
+        Section(stringResource(R.string.as_actions))
+        ChoiceRow(stringResource(R.string.as_insert_text), s.insertMode, InsertMode.values()) { v -> store.update { it.copy(insertMode = v) } }
         // TODO: per-tool policy list from ToolRegistry
 
-        Section("Knowledge & style")
-        TextRow("About me", s.aboutMe, { v -> store.update { it.copy(aboutMe = v) } }, lines = 3)
-        TextRow("Standing instructions", s.standingInstructions, { v -> store.update { it.copy(standingInstructions = v) } }, lines = 3)
-        TextRow("Writing style (short / regular / formal)", s.writingStyle, { v -> store.update { it.copy(writingStyle = v) } })
-        SwitchRow("Memory", s.memoryEnabled) { v -> store.update { it.copy(memoryEnabled = v) } }
+        Section(stringResource(R.string.as_knowledge))
+        TextRow(stringResource(R.string.as_about_me), s.aboutMe, { v -> store.update { it.copy(aboutMe = v) } }, lines = 3)
+        TextRow(stringResource(R.string.as_standing), s.standingInstructions, { v -> store.update { it.copy(standingInstructions = v) } }, lines = 3)
+        TextRow(stringResource(R.string.as_writing_style), s.writingStyle, { v -> store.update { it.copy(writingStyle = v) } })
+        SwitchRow(stringResource(R.string.as_memory), s.memoryEnabled) { v -> store.update { it.copy(memoryEnabled = v) } }
 
-        Section("Language")
-        ChoiceRow("Reply language", s.replyLanguage, ReplyLanguage.values()) { v -> store.update { it.copy(replyLanguage = v) } }
+        Section(stringResource(R.string.as_language))
+        ChoiceRow(stringResource(R.string.as_reply_language), s.replyLanguage, ReplyLanguage.values()) { v -> store.update { it.copy(replyLanguage = v) } }
 
-        Section("Privacy & cost")
-        TextRow("Keep history (days)", s.historyRetentionDays.toString(), { v -> v.toIntOrNull()?.let { d -> store.update { it.copy(historyRetentionDays = d) } } })
-        TextRow("Monthly cap, USD (0 = none)", s.monthlyCapUsd.toString(), { v -> v.toFloatOrNull()?.let { c -> store.update { it.copy(monthlyCapUsd = c) } } })
+        Section(stringResource(R.string.as_privacy))
+        TextRow(stringResource(R.string.as_history_days), s.historyRetentionDays.toString(), { v -> v.toIntOrNull()?.let { d -> store.update { it.copy(historyRetentionDays = d) } } })
+        TextRow(stringResource(R.string.as_monthly_cap), s.monthlyCapUsd.toString(), { v -> v.toFloatOrNull()?.let { c -> store.update { it.copy(monthlyCapUsd = c) } } })
     }
 }
 
@@ -116,9 +116,9 @@ fun ConnectionsScreen(onClickBack: () -> Unit) {
     val s by store.state.collectAsState()
     var token by remember { mutableStateOf(secrets.connectorRuntimeToken.orEmpty()) }
     AgentScaffold(stringResource(R.string.settings_screen_connections), onClickBack) {
-        Section("Server (self-hosted OpenConnector)")
-        TextRow("Worker URL", s.connectorUrl, { v -> store.update { it.copy(connectorUrl = v) } })
-        OutlinedTextField(token, { token = it; secrets.connectorRuntimeToken = it.trim() }, label = { Text("Runtime token (not the admin token)") },
+        Section(stringResource(R.string.as_server))
+        TextRow(stringResource(R.string.as_worker_url), s.connectorUrl, { v -> store.update { it.copy(connectorUrl = v) } })
+        OutlinedTextField(token, { token = it; secrets.connectorRuntimeToken = it.trim() }, label = { Text(stringResource(R.string.as_runtime_token)) },
             visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth())
         val scope = rememberCoroutineScope()
         var status by remember { mutableStateOf<String?>(null) }
@@ -137,17 +137,17 @@ fun ConnectionsScreen(onClickBack: () -> Unit) {
         }, modifier = Modifier.padding(top = 8.dp)) { Text(stringResource(R.string.agent_test)) }
         status?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
 
-        Section("My connections")
-        if (connections.isEmpty()) Text("Tap Test to load your connected accounts.", style = MaterialTheme.typography.bodySmall)
+        Section(stringResource(R.string.as_my_connections))
+        if (connections.isEmpty()) Text(stringResource(R.string.as_tap_test), style = MaterialTheme.typography.bodySmall)
         connections.forEach { Text(it, modifier = Modifier.padding(vertical = 4.dp)) }
 
-        Section("Add connection")
+        Section(stringResource(R.string.as_add_connection))
         Button(enabled = s.connectorUrl.isNotBlank(), onClick = {
             CustomTabsIntent.Builder().build().launchUrl(ctx, Uri.parse(s.connectorUrl.trimEnd('/') + "/"))
-        }) { Text("Open console") }
+        }) { Text(stringResource(R.string.as_open_console)) }
 
-        Section("Agent permissions")
-        Text("Reads allowed, writes ask. Per-action allow / ask / block. TODO.", style = MaterialTheme.typography.bodySmall)
+        Section(stringResource(R.string.as_agent_permissions))
+        Text(stringResource(R.string.as_perm_note), style = MaterialTheme.typography.bodySmall)
     }
 }
 

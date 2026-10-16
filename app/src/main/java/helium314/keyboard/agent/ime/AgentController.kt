@@ -136,6 +136,14 @@ class AgentController(private val ime: LatinIME) : ToolContext {
         buffer.append(text); renderTyping(); return true
     }
 
+    /** A glide-typed word while typing a request: append it with a space, like the field would. */
+    fun onGestureWord(word: String): Boolean {
+        if (mode != Mode.TYPING) return false
+        if (buffer.isNotEmpty() && !buffer.endsWith(" ")) buffer.append(' ')
+        buffer.append(word).append(' ')
+        renderTyping(); return true
+    }
+
     private fun onMicTap(): Boolean {
         if (settings.micTap == MicTapAction.DICTATION) return false // LatinIME does normal voice input
         toggleVoice(); return true

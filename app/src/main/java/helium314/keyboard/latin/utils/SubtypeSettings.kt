@@ -230,6 +230,15 @@ object SubtypeSettings {
         } else {
             systemSubtypes.addAll(subtypes)
         }
+        // Agent Keyboard: Hebrew and English are always on out of the box, Hebrew first.
+        val agentDefaults = listOf(Locale.forLanguageTag("he"), Locale.US).mapNotNull { locale ->
+            (resourceSubtypesByLocale[locale]
+                ?: LocaleUtils.getBestMatch(locale, resourceSubtypesByLocale.keys) { it }?.let { resourceSubtypesByLocale[it] })
+                ?.firstOrNull()
+        }
+        val rest = systemSubtypes.filter { s -> agentDefaults.none { it.locale() == s.locale() } }
+        systemSubtypes.clear()
+        systemSubtypes.addAll(agentDefaults + rest)
         return systemSubtypes
     }
 
