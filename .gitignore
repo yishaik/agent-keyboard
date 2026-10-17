@@ -17,3 +17,6 @@ tools/*.txt
 *.sh
 !scripts/fetch-glide.sh
 app/glide-assets/
+node_modules/
+.wrangler/
+
