@@ -32,7 +32,7 @@ data class AgentSettings(
     val openAiTextModel: String = "gpt-5",
     val voiceName: String = "",
     val speechSpeed: Float = 1.0f,
-    val tokenBrokerUrl: String = "",               // your Cloudflare token Worker
+    val tokenBrokerUrl: String = SetupConfig.DEFAULT_BROKER_URL,
 
     // 2. Activation
     val micTap: MicTapAction = MicTapAction.AGENT,
@@ -70,7 +70,7 @@ data class AgentSettings(
     val agentGlow: Float = 0.6f,
 
     // Connections (OpenConnector, self-hosted on Cloudflare)
-    val connectorUrl: String = "",                  // https://open-connector.<you>.workers.dev
+    val connectorUrl: String = SetupConfig.DEFAULT_CONNECTOR_URL,
 ) {
     fun voiceProviderFor(lang: String): Provider = when {
         lang.startsWith("he") || lang.startsWith("iw") -> hebrewVoiceProvider ?: voiceProvider

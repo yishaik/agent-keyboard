@@ -138,6 +138,18 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.DeviceDefault.Dialog.NoActionBar" />
 
+        <activity android:name="helium314.keyboard.agent.settings.SetupApplyActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/platformActivityTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="agentkeyboard" android:host="setup" />
+            </intent-filter>
+        </activity>
+
         <service android:name="helium314.keyboard.agent.screen.AgentAssistService"
             android:permission="android.permission.BIND_VOICE_INTERACTION"
             android:exported="true">

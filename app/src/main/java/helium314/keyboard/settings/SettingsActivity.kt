@@ -101,6 +101,9 @@ open class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPre
                         !UncachedInputMethodManagerUtils.isThisImeCurrent(this, imm)
                                 || !UncachedInputMethodManagerUtils.isThisImeEnabled(this, imm)
                     ) }
+                    var showAgentSetup by rememberSaveable {
+                        mutableStateOf(helium314.keyboard.agent.settings.AgentSetup.needsWizard(this))
+                    }
                     if (spellchecker)
                         Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { innerPadding ->
                             Column(Modifier.padding(innerPadding)) {
@@ -120,7 +123,9 @@ open class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPre
                     else {
                         SettingsNavHost(onClickBack = { this.finish() })
                         if (showWelcomeWizard) {
-                            WelcomeWizard(close = { showWelcomeWizard = false }, finish = this::finish)
+                            WelcomeWizard(close = { showWelcomeWizard = false }, finish = { showWelcomeWizard = false })
+                        } else if (showAgentSetup) {
+                            helium314.keyboard.agent.settings.AgentSetupWizard(close = { showAgentSetup = false })
                         } else if (crashReports.isNotEmpty()) {
                             val ctx = LocalContext.current
                             ConfirmationDialog(
