@@ -116,4 +116,9 @@
     <string name="agent_setup_rejected_https">הקישור משתמש בכתובת לא מאובטחת (לא https) עבור %s. לא שונה דבר.</string>
     <string name="agent_setup_rejected_url">בקישור יש כתובת שרת לא תקינה. לא שונה דבר.</string>
     <string name="agent_setup_rejected_token">בקישור יש טוקן לא תקין. לא שונה דבר.</string>
+    <!-- broker errors shown in the agent panel -->
+    <string name="agent_err_unauthorized">הברוקר דחה את טוקן האפליקציה. הריצו שוב את ההגדרה.</string>
+    <string name="agent_err_model">הברוקר לא מאפשר את המודל הזה (%s).</string>
+    <string name="agent_err_too_large">הבקשה גדולה מדי עבור הברוקר (צילום המסך או השיחה ארוכים מדי).</string>
+    <string name="agent_err_daily_limit">הגעתם למגבלת השימוש היומית. היא מתאפסת ב־00:00 UTC (‏02:00–03:00 שעון ישראל).</string>
 </resources>

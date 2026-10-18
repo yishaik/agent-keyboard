@@ -118,4 +118,9 @@
     <string name="agent_setup_rejected_https">This link uses an insecure (non-https) address for %s. Nothing was changed.</string>
     <string name="agent_setup_rejected_url">This link has an invalid server address. Nothing was changed.</string>
     <string name="agent_setup_rejected_token">This link has an invalid token. Nothing was changed.</string>
+    <!-- broker errors shown in the agent panel -->
+    <string name="agent_err_unauthorized">The broker rejected the app token. Run setup again.</string>
+    <string name="agent_err_model">The broker does not allow this model (%s).</string>
+    <string name="agent_err_too_large">Request too large for the broker (screenshot or conversation too big).</string>
+    <string name="agent_err_daily_limit">Daily usage limit reached. It resets at 00:00 UTC.</string>
 </resources>

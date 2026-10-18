@@ -27,7 +27,7 @@ class TokenBroker(private val http: OkHttpClient, private val baseUrl: () -> Str
             .header("Authorization", "Bearer ${appToken() ?: error("Token broker not configured")}")
             .post(body).build()
         http.newCall(req).execute().use { r ->
-            check(r.isSuccessful) { "Token broker ${r.code}" }
+            if (!r.isSuccessful) error(BrokerError.parse(r.code, r.body?.string(), model).reason)
             Json.parseToJsonElement(r.body!!.string()).jsonObject["token"]!!.jsonPrimitive.content
         }
     }

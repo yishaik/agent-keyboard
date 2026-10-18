@@ -1,5 +1,6 @@
 package helium314.keyboard.agent
 
+import helium314.keyboard.agent.providers.BrokerError
 import helium314.keyboard.agent.settings.SetupConfig
 import helium314.keyboard.agent.settings.SetupGuard
 import helium314.keyboard.agent.settings.SetupGuard.Field
@@ -75,5 +76,14 @@ class SetupGuardTest {
 
     @Test fun `empty payload does nothing`() {
         assertEquals(Review.Empty, SetupGuard.review(SetupConfig.parse("hello"), fresh))
+    }
+
+    @Test fun `broker errors map to panel reasons`() {
+        assertEquals(BrokerError.Parsed("broker:daily_limit", false), BrokerError.parse(429, """{"error":"daily_limit","message":"x"}"""))
+        assertEquals(BrokerError.Parsed("HTTP 429", true), BrokerError.parse(429, """{"error":{"type":"rate_limit"}}"""))
+        assertEquals("broker:too_large", BrokerError.parse(413, "").reason)
+        assertEquals(BrokerError.Parsed("broker:model_not_allowed:gpt-5", true), BrokerError.parse(403, """{"error":"model_not_allowed"}""", "gpt-5"))
+        assertEquals("broker:unauthorized", BrokerError.parse(401, """{"error":"unauthorized"}""").reason)
+        assertEquals(BrokerError.Parsed("HTTP 502", true), BrokerError.parse(502, "not json"))
     }
 }
