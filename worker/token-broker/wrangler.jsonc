@@ -1,6 +1,26 @@
 {
   "name": "agent-keyboard-token-broker",
   "main": "src/index.ts",
-  "compatibility_date": "2026-10-01"
+  "compatibility_date": "2026-10-01",
   // secrets: npx wrangler secret put APP_TOKEN | XAI_API_KEY | OPENAI_API_KEY
+
+  // Daily counters live in one Durable Object. `wrangler deploy` creates the namespace from this
+  // block and the migration below; nothing has to be created by hand in the dashboard.
+  "durable_objects": {
+    "bindings": [{ "name": "USAGE", "class_name": "UsageCounter" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UsageCounter"] }],
+
+  // Limits. Counters reset at 00:00 UTC. Edit and redeploy to change.
+  "vars": {
+    "MAX_BODY_BYTES": "524288",          // 512 KB: one downscaled JPEG screenshot + prompt + tools
+    "DAILY_REQUEST_LIMIT": "500",        // all /chat and /token calls
+    "DAILY_VOICE_SESSION_LIMIT": "100",  // /token calls (each one opens a realtime voice session)
+    "DAILY_TOKEN_LIMIT": "2000000",      // chat usage.total_tokens; checked before each chat call
+    // Leave empty to use the built-in allowlist (DEFAULT_MODELS in src/index.ts). Comma-separated.
+    "ALLOWED_CHAT_MODELS_GROK": "",
+    "ALLOWED_CHAT_MODELS_OPENAI": "",
+    "ALLOWED_VOICE_MODELS_GROK": "",
+    "ALLOWED_VOICE_MODELS_OPENAI": ""
+  }
 }
