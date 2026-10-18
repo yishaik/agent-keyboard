@@ -53,7 +53,9 @@ packages `app/prebuilt-jni/*/libjni_latinime.so` from the HeliBoard v4.2 release
 - [x] OpenConnector via its MCP endpoint (search_actions, list_connections, execute_action); Test + accounts list in Connections.
 - [x] Token broker pins model + 300 s expiry per provider docs.
 - [x] Keystore AES-GCM for `SecretStore` (API 23+).
-- [ ] On-device test pass (real phone): VAD sensitivity, playback/echo, RTL layout of the strip.
+- [x] Setup link asks before applying (lists fields + hosts, Cancel by default); https + host allowlist in `SetupGuard`.
+- [x] Broker guard rails: model allowlist, 512 KB body cap, daily request / voice-session / token limits (Durable Object), JSON errors shown in the panel.
+- [ ] On-device test pass (real phone), script in `docs/PHONE_TEST.md`: VAD sensitivity, playback/echo, RTL layout of the strip.
 - [ ] Agent as a subtype in the globe cycle (currently a toolbar key).
 - [ ] Gesture typing into the agent line (batch input still goes to the field).
 - [ ] Translate remaining Agent settings labels (screen titles are translated; row labels are English).
