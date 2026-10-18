@@ -121,14 +121,19 @@ fun AgentSetupWizard(close: () -> Unit) {
                 )
                 Button(
                     onClick = {
-                        val cfg = SetupConfig.parse(paste)
-                        if (cfg.isEmpty) {
-                            Toast.makeText(ctx, R.string.agent_setup_paste_bad, Toast.LENGTH_SHORT).show()
-                        } else {
-                            AgentSetup.apply(ctx, cfg)
-                            paste = ""
-                            refresh()
-                            Toast.makeText(ctx, R.string.agent_setup_applied, Toast.LENGTH_SHORT).show()
+                        // Same host allowlist + https rule as the deep link. The user pasted it here
+                        // and tapped Save themselves, so no second confirmation.
+                        when (val r = SetupGuard.review(SetupConfig.parse(paste), AgentSetup.current(ctx))) {
+                            SetupGuard.Review.Empty ->
+                                Toast.makeText(ctx, R.string.agent_setup_paste_bad, Toast.LENGTH_SHORT).show()
+                            is SetupGuard.Review.Rejected ->
+                                Toast.makeText(ctx, SetupApplyActivity.rejectedMessage(ctx, r), Toast.LENGTH_LONG).show()
+                            is SetupGuard.Review.Ok -> {
+                                AgentSetup.apply(ctx, r.config)
+                                paste = ""
+                                refresh()
+                                Toast.makeText(ctx, R.string.agent_setup_applied, Toast.LENGTH_SHORT).show()
+                            }
                         }
                     },
                     enabled = paste.isNotBlank(),

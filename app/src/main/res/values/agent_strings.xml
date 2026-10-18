@@ -101,4 +101,21 @@
     <string name="as_broker_url">Token broker URL</string>
     <string name="as_worker_url">Worker URL</string>
     <string name="as_writing_style">Writing style (short / regular / formal)</string>
+    <!-- setup link confirmation (SetupApplyActivity / SetupGuard) -->
+    <string name="agent_setup_confirm_title">Apply server settings?</string>
+    <string name="agent_setup_confirm_lede">A setup link wants to change Agent Keyboard\'s server settings:</string>
+    <string name="agent_setup_confirm_warning">Only tap Apply if you just opened your own setup page. Whoever runs these servers sees your prompts, screenshots and connected-app actions.</string>
+    <string name="agent_setup_confirm_apply">Apply</string>
+    <string name="agent_setup_field_broker">Token broker server</string>
+    <string name="agent_setup_field_app_token">App token</string>
+    <string name="agent_setup_field_connector">Connections server</string>
+    <string name="agent_setup_field_runtime_token">Connections token</string>
+    <string name="agent_setup_will_replace">will be replaced</string>
+    <string name="agent_setup_will_set">will be set</string>
+    <string name="agent_setup_host_changes">⚠ different server from the one you use now</string>
+    <string name="agent_setup_rejected_title">Setup link blocked</string>
+    <string name="agent_setup_rejected_host">This link points to %s, which is not one of Agent Keyboard\'s known servers. Nothing was changed.</string>
+    <string name="agent_setup_rejected_https">This link uses an insecure (non-https) address for %s. Nothing was changed.</string>
+    <string name="agent_setup_rejected_url">This link has an invalid server address. Nothing was changed.</string>
+    <string name="agent_setup_rejected_token">This link has an invalid token. Nothing was changed.</string>
 </resources>

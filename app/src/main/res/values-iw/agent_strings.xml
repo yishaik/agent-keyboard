@@ -99,4 +99,21 @@
     <string name="as_broker_url">כתובת Token broker</string>
     <string name="as_worker_url">כתובת ה־Worker</string>
     <string name="as_writing_style">סגנון כתיבה (short / regular / formal)</string>
+    <!-- setup link confirmation (SetupApplyActivity / SetupGuard) -->
+    <string name="agent_setup_confirm_title">להחיל הגדרות שרת?</string>
+    <string name="agent_setup_confirm_lede">קישור הגדרה מבקש לשנות את הגדרות השרת של Agent Keyboard:</string>
+    <string name="agent_setup_confirm_warning">הקישו «החלה» רק אם פתחתם עכשיו את דף ההגדרה שלכם. מי שמפעיל את השרתים האלה רואה את הבקשות, צילומי המסך והפעולות באפליקציות המחוברות.</string>
+    <string name="agent_setup_confirm_apply">החלה</string>
+    <string name="agent_setup_field_broker">שרת הברוקר</string>
+    <string name="agent_setup_field_app_token">טוקן האפליקציה</string>
+    <string name="agent_setup_field_connector">שרת החיבורים</string>
+    <string name="agent_setup_field_runtime_token">טוקן החיבורים</string>
+    <string name="agent_setup_will_replace">יוחלף</string>
+    <string name="agent_setup_will_set">יוגדר</string>
+    <string name="agent_setup_host_changes">⚠ שרת אחר מזה שבשימוש עכשיו</string>
+    <string name="agent_setup_rejected_title">קישור ההגדרה נחסם</string>
+    <string name="agent_setup_rejected_host">הקישור מפנה אל %s, שאינו אחד מהשרתים המוכרים של Agent Keyboard. לא שונה דבר.</string>
+    <string name="agent_setup_rejected_https">הקישור משתמש בכתובת לא מאובטחת (לא https) עבור %s. לא שונה דבר.</string>
+    <string name="agent_setup_rejected_url">בקישור יש כתובת שרת לא תקינה. לא שונה דבר.</string>
+    <string name="agent_setup_rejected_token">בקישור יש טוקן לא תקין. לא שונה דבר.</string>
 </resources>
