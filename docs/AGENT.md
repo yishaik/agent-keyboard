@@ -44,6 +44,8 @@ Without an NDK (e.g. linux-arm64): `./gradlew -Pagent.prebuiltNative=true assemb
 packages `app/prebuilt-jni/*/libjni_latinime.so` from the HeliBoard v4.2 release instead of building it.
 
 ## Not done yet (next steps)
+Current status and ordered next steps: see `docs/HANDOFF.md`. The two security items below are in PR #1 (not merged yet).
+
 - [x] Build and fix compile errors (debugNoMinify APK builds).
 - [x] Agent key (toolbar AGENT key, codes AGENT / AGENT_VOICE / VOICE_INPUT_LONG); keys routed to the agent line.
 - [x] `AgentController`: ToolContext with preview / confirm in the strip, typed + voice sessions, failover.
@@ -53,9 +55,13 @@ packages `app/prebuilt-jni/*/libjni_latinime.so` from the HeliBoard v4.2 release
 - [x] OpenConnector via its MCP endpoint (search_actions, list_connections, execute_action); Test + accounts list in Connections.
 - [x] Token broker pins model + 300 s expiry per provider docs.
 - [x] Keystore AES-GCM for `SecretStore` (API 23+).
-- [ ] On-device test pass (real phone): VAD sensitivity, playback/echo, RTL layout of the strip.
+- [x] Setup link asks before applying (lists fields + hosts, Cancel by default); https + host allowlist in `SetupGuard`.
+- [x] Broker guard rails: model allowlist, 512 KB body cap, daily request / voice-session / token limits (Durable Object), JSON errors shown in the panel.
+- [ ] On-device test pass (real phone), script in `docs/PHONE_TEST.md`: VAD sensitivity, playback/echo, RTL layout of the strip.
 - [ ] Agent as a subtype in the globe cycle (currently a toolbar key).
 - [ ] Gesture typing into the agent line (batch input still goes to the field).
 - [ ] Translate remaining Agent settings labels (screen titles are translated; row labels are English).
 - [ ] Per-tool policy editor and blocked-apps picker in settings.
-- [ ] Token usage meter for the monthly cap.
+- [ ] Token usage meter for the monthly cap (`monthlyCapUsd`, `historyRetentionDays`, `memoryEnabled` are still no-ops).
+- [ ] SSE streaming of text replies.
+- [ ] Real `AgentRecognitionService` (currently a stub) / long-press-Home voice UI.

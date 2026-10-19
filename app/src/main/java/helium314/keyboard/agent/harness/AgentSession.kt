@@ -92,10 +92,13 @@ class AgentSession(
             val ok = runTextWith(first, text, fieldHint, screenText)
             if (!ok && s.autoFallback) {
                 onEvent(AgentEvent.Status("fallback:${other(first).name}"))
-                runTextWith(other(first), text, fieldHint, screenText)
-            }
+                if (!runTextWith(other(first), text, fieldHint, screenText)) lastTextFailure?.let(onEvent)
+            } else if (!ok) lastTextFailure?.let(onEvent)
         }
     }
+
+    /** Last failure of a text round, shown if every provider failed before showing anything. */
+    private var lastTextFailure: AgentEvent.Failed? = null
 
     private suspend fun runTextWith(p: Provider, text: String, fieldHint: String?, screenText: String?): Boolean {
         val s = settings()
@@ -120,6 +123,7 @@ class AgentSession(
                 failed = AgentEvent.Failed(e.message ?: "request failed", retryable = true)
             }
             failed?.let { f ->
+                lastTextFailure = f
                 if (rounds == 1 && f.retryable) return false // nothing shown yet: let caller fall back
                 onEvent(f); return true
             }

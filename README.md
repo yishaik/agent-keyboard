@@ -1,3 +1,6 @@
+## Agent Keyboard handoff
+Current state, next steps and build/test commands: [docs/HANDOFF.md](docs/HANDOFF.md). Coding agents: see [AGENTS.md](AGENTS.md).
+
 # Agent Keyboard
 
 HeliBoard fork with a built-in voice and text AI agent (Grok Voice 3.0 / OpenAI), screen awareness, and connected apps via self-hosted OpenConnector. See [docs/AGENT.md](docs/AGENT.md).

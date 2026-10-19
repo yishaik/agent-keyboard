@@ -138,10 +138,13 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.DeviceDefault.Dialog.NoActionBar" />
 
+        <!-- Exported for the agentkeyboard://setup link; it only writes after an explicit Apply
+             and only for allowlisted https hosts (see SetupGuard). -->
         <activity android:name="helium314.keyboard.agent.settings.SetupApplyActivity"
             android:exported="true"
             android:excludeFromRecents="true"
-            android:theme="@style/platformActivityTheme">
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

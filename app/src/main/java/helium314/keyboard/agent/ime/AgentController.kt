@@ -8,6 +8,8 @@ import android.os.Handler
 import android.os.Looper
 import android.text.InputType
 import android.util.Base64
+import helium314.keyboard.agent.providers.BrokerError
+import helium314.keyboard.agent.screen.ScreenshotCodec
 import android.util.Log
 import android.view.inputmethod.EditorInfo
 import helium314.keyboard.agent.audio.AudioIO
@@ -440,9 +442,22 @@ class AgentController(private val ime: LatinIME) : ToolContext {
     }
 
     private fun error(reason: String) {
-        Log.w(TAG, "agent error: $reason")
+        Log.w(TAG, "agent error: ${reason.take(160)}")
         if (mode == Mode.WORKING) mode = Mode.MESSAGE
-        message(ime.getString(R.string.agent_error, reason.take(160)))
+        message(brokerMessage(reason) ?: ime.getString(R.string.agent_error, reason.take(160)))
+    }
+
+    /** Clear panel text for the broker's own refusals (see worker/token-broker). */
+    private fun brokerMessage(reason: String): String? {
+        if (!reason.startsWith(BrokerError.PREFIX)) return null
+        val rest = reason.removePrefix(BrokerError.PREFIX)
+        return when (rest.substringBefore(':')) {
+            "unauthorized" -> ime.getString(R.string.agent_err_unauthorized)
+            "model_not_allowed" -> ime.getString(R.string.agent_err_model, rest.substringAfter(':', "?"))
+            "too_large" -> ime.getString(R.string.agent_err_too_large)
+            "daily_limit" -> ime.getString(R.string.agent_err_daily_limit)
+            else -> null
+        }
     }
 
     // ---------------------------------------------------------------- helpers
@@ -557,7 +572,7 @@ class AgentController(private val ime: LatinIME) : ToolContext {
                         addJsonObject { put("type", "text"); put("text", question) }
                         addJsonObject {
                             put("type", "image_url")
-                            putJsonObject("image_url") { put("url", "data:image/png;base64," + Base64.encodeToString(png, Base64.NO_WRAP)) }
+                            putJsonObject("image_url") { put("url", "data:image/jpeg;base64," + Base64.encodeToString(ScreenshotCodec.forUpload(png), Base64.NO_WRAP)) }
                         }
                     }
                 }
@@ -568,7 +583,7 @@ class AgentController(private val ime: LatinIME) : ToolContext {
         runCatching {
             http.newCall(req).execute().use { r ->
                 val txt = r.body?.string().orEmpty()
-                if (!r.isSuccessful) return@use "Vision request failed: ${r.code}"
+                if (!r.isSuccessful) return@use "Vision request failed: " + BrokerError.parse(r.code, txt, spec.textModel).reason
                 Json.parseToJsonElement(txt).jsonObject["choices"]!!.jsonArray[0].jsonObject["message"]!!
                     .jsonObject["content"]!!.jsonPrimitive.content
             }

@@ -77,6 +77,19 @@ object AgentSetup {
             Intent(Settings.ACTION_VOICE_INPUT_SETTINGS)
     }
 
+    /** What is stored now, for the setup confirmation. Token values are not exposed. */
+    fun current(context: Context): SetupGuard.Current {
+        val s = AgentSettingsStore.get(context).state.value
+        val secrets = SecretStore(context)
+        return SetupGuard.Current(
+            brokerUrl = s.tokenBrokerUrl,
+            hasAppToken = !secrets.brokerAppToken.isNullOrBlank(),
+            connectorUrl = s.connectorUrl,
+            hasRuntimeToken = !secrets.connectorRuntimeToken.isNullOrBlank(),
+        )
+    }
+
+    /** Writes [config]. Callers must have passed it through [SetupGuard.review] and asked the user. */
     fun apply(context: Context, config: SetupConfig) {
         val c = config.withDefaults()
         val store = AgentSettingsStore.get(context)

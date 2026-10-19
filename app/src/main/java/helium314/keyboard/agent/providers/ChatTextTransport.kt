@@ -54,7 +54,10 @@ class ChatTextTransport(
         val req = Request.Builder().url(brokerUrl().trimEnd('/') + "/chat/" + spec.provider.name.lowercase())
             .header("Authorization", "Bearer ${appToken() ?: error("Token broker not configured")}").post(body).build()
         val res = http.newCall(req).execute()
-        if (!res.isSuccessful) { emit(AgentEvent.Failed("HTTP ${res.code}", retryable = res.code >= 500 || res.code == 429)); return@flow }
+        if (!res.isSuccessful) {
+            val e = res.use { BrokerError.parse(it.code, it.body?.string(), spec.textModel) }
+            emit(AgentEvent.Failed(e.reason, retryable = e.retryable)); return@flow
+        }
         val msg = Json.parseToJsonElement(res.body!!.string()).jsonObject["choices"]!!.jsonArray[0].jsonObject["message"]!!.jsonObject
         messages += msg
         msg["content"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content?.let { emit(AgentEvent.TextDelta(it)) }

@@ -161,3 +161,10 @@ dependencies {
     testImplementation("androidx.test:runner:1.7.0")
     testImplementation("androidx.test:core:1.7.0")
 }
+
+// Robolectric's Android SDK 36 sandbox (robolectric.properties) refuses to start on Java 17, which
+// is what the "Test build" CI workflow uses. Run unit tests on a Java 21 toolchain regardless of the
+// JDK Gradle itself runs on.
+tasks.withType<Test>().configureEach {
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) })
+}
