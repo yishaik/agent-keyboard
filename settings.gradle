@@ -1,2 +1,7 @@
+plugins {
+    // lets the unit-test toolchain below (Java 21) be downloaded when it isn't installed
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
 include ':app'
 include ':tools:make-emoji-keys'
