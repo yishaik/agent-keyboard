@@ -1,5 +1,7 @@
 package helium314.keyboard.agent.tools
 
+import helium314.keyboard.agent.harness.UntrustedContent
+
 import helium314.keyboard.agent.connectors.OpenConnectorClient
 import helium314.keyboard.agent.harness.Tool
 import helium314.keyboard.agent.harness.ToolContext
@@ -19,7 +21,7 @@ class ConnectorTools(private val client: OpenConnectorClient, private val askFor
         override val writes = false
         override suspend fun run(args: JsonObject, ctx: ToolContext): ToolResult = runCatching {
             client.searchActions(args["query"]?.jsonPrimitive?.content.orEmpty()).toString().take(6000)
-        }.fold({ ToolResult(it) }, { ToolResult(it.message ?: "failed", true) })
+        }.fold({ ToolResult(UntrustedContent.wrap("connector", it.toString(), maxChars = 16000)) }, { ToolResult(it.message ?: "failed", true) })
     }
 
     val listConnections = object : Tool {
@@ -32,7 +34,7 @@ class ConnectorTools(private val client: OpenConnectorClient, private val askFor
         override val writes = false
         override suspend fun run(args: JsonObject, ctx: ToolContext): ToolResult = runCatching {
             client.listConnections(args["service"]?.jsonPrimitive?.content).toString().take(4000)
-        }.fold({ ToolResult(it) }, { ToolResult(it.message ?: "failed", true) })
+        }.fold({ ToolResult(UntrustedContent.wrap("connector", it.toString(), maxChars = 16000)) }, { ToolResult(it.message ?: "failed", true) })
     }
 
     val runAction = object : Tool {
@@ -53,7 +55,7 @@ class ConnectorTools(private val client: OpenConnectorClient, private val askFor
             val input = args["input"]?.jsonObject ?: JsonObject(emptyMap())
             if (askFor(id) && !ctx.confirm(id, input.toString())) return ToolResult("User declined", true)
             return runCatching { client.runAction(id, input, args["connection"]?.jsonPrimitive?.content) }
-                .fold({ ToolResult(it.toString()) }, { ToolResult(it.message ?: "failed", true) })
+                .fold({ ToolResult(UntrustedContent.wrap("connector", it.toString(), maxChars = 16000)) }, { ToolResult(it.message ?: "failed", true) })
         }
     }
 
