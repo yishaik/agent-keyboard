@@ -1,5 +1,7 @@
 package helium314.keyboard.agent.tools
 
+import helium314.keyboard.agent.harness.UntrustedContent
+
 import helium314.keyboard.agent.harness.Tool
 import helium314.keyboard.agent.harness.ToolContext
 import helium314.keyboard.agent.harness.ToolResult
@@ -17,7 +19,7 @@ class ScreenTools(private val describeImage: suspend (ByteArray, String) -> Stri
         override val writes = false
         override suspend fun run(args: JsonObject, ctx: ToolContext): ToolResult {
             val snap = ScreenContextHolder.request(screenshot = false) ?: return ToolResult("Screen not available: set Agent Keyboard as the default digital assistant app, or this app is blocked in settings", true)
-            return ToolResult(snap.text.take(8000))
+            return ToolResult(UntrustedContent.wrap("screen", snap.text))
         }
     }
 
@@ -30,7 +32,7 @@ class ScreenTools(private val describeImage: suspend (ByteArray, String) -> Stri
             val snap = ScreenContextHolder.request(screenshot = true) ?: return ToolResult("Screen not available", true)
             val png = snap.screenshotPng ?: return ToolResult("No screenshot (FLAG_SECURE or disabled)", true)
             val q = args["question"]?.jsonPrimitive?.content ?: "Describe the screen."
-            return ToolResult(describeImage(png, q))
+            return ToolResult(UntrustedContent.wrap("screen_description", describeImage(png, q)))
         }
     }
 

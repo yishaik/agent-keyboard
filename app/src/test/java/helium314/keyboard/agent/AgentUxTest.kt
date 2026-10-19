@@ -87,14 +87,14 @@ class AgentUxTest {
         assertTrue(prompt.contains("Hello Dana"))
         assertTrue(prompt.contains("Dinner at 8?"))
         assertTrue(prompt.contains("com.whatsapp"))
-        assertTrue(prompt.contains("--- screen ---"))
+        assertTrue(prompt.contains("<untrusted_screen id="))
         assertFalse(prompt.contains("Call read_screen or describe_screen when you need what is on screen."))
     }
 
     @Test fun `prompt asks for a tool when no screen text is attached`() {
         val prompt = PromptBuilder.build(AgentSettings(), "com.whatsapp", "en", null, null)
         assertTrue(prompt.contains("Call read_screen or describe_screen when you need what is on screen."))
-        assertFalse(prompt.contains("--- screen ---"))
+        assertFalse(prompt.contains("<untrusted_screen id="))
     }
 
     @Test fun `setup query keeps plus signs in the app token`() {
