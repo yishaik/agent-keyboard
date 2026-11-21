@@ -1,0 +1,33 @@
+0 verbose cli /usr/bin/node /usr/lib/node_modules/npm/bin/npm-cli.js
+1 info using npm@10.9.8
+2 info using node@v22.23.2
+3 silly config load:file:/usr/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/ubuntu/git/agent-keyboard/worker/token-broker/.npmrc
+5 silly config load:file:/home/ubuntu/git/agent-keyboard/qa/agent-keyboard-assessment/isolated-home/.npmrc
+6 silly config load:file:/usr/etc/npmrc
+7 verbose title npm exec wrangler dev --local --port 8799 --ip 127.0.0.1 --var APP_TOKEN:test-app-token --var XAI_API_KEY:not-a-real-key --var OPENAI_API_KEY:not-a-real-key --var DAILY_REQUEST_LIMIT:0 --var MAX_BODY_BYTES:1024
+8 verbose argv "exec" "--" "wrangler" "dev" "--local" "--port" "8799" "--ip" "127.0.0.1" "--var" "APP_TOKEN:test-app-token" "--var" "XAI_API_KEY:not-a-real-key" "--var" "OPENAI_API_KEY:not-a-real-key" "--var" "DAILY_REQUEST_LIMIT:0" "--var" "MAX_BODY_BYTES:1024"
+9 verbose logfile logs-max:10 dir:/home/ubuntu/git/agent-keyboard/qa/agent-keyboard-assessment/npm-cache/_logs/2026-10-20T19_17_08_570Z-
+10 verbose logfile /home/ubuntu/git/agent-keyboard/qa/agent-keyboard-assessment/npm-cache/_logs/2026-10-20T19_17_08_570Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+13 verbose stack Error: request to https://registry.npmjs.org/wrangler failed: cache mode is 'only-if-cached' but no cached response is available.
+13 verbose stack     at cacheFetch (/usr/lib/node_modules/npm/node_modules/make-fetch-happen/lib/cache/index.js:12:13)
+13 verbose stack     at async fetch (/usr/lib/node_modules/npm/node_modules/make-fetch-happen/lib/fetch.js:98:7)
+13 verbose stack     at async RegistryFetcher.packument (/usr/lib/node_modules/npm/node_modules/pacote/lib/registry.js:90:19)
+13 verbose stack     at async RegistryFetcher.manifest (/usr/lib/node_modules/npm/node_modules/pacote/lib/registry.js:128:23)
+13 verbose stack     at async getManifest (/usr/lib/node_modules/npm/node_modules/libnpmexec/lib/index.js:27:22)
+13 verbose stack     at async missingFromTree (/usr/lib/node_modules/npm/node_modules/libnpmexec/lib/index.js:60:22)
+13 verbose stack     at async /usr/lib/node_modules/npm/node_modules/libnpmexec/lib/index.js:182:32
+13 verbose stack     at async Promise.all (index 0)
+13 verbose stack     at async exec (/usr/lib/node_modules/npm/node_modules/libnpmexec/lib/index.js:180:3)
+13 verbose stack     at async Npm.exec (/usr/lib/node_modules/npm/lib/npm.js:207:9)
+14 error code ENOTCACHED
+15 error request to https://registry.npmjs.org/wrangler failed: cache mode is 'only-if-cached' but no cached response is available.
+16 verbose cwd /home/ubuntu/git/agent-keyboard/worker/token-broker
+17 verbose os Linux 7.0.0-1013-oracle
+18 verbose node v22.23.2
+19 verbose npm  v10.9.8
+20 verbose exit 1
+21 verbose code 1
+22 error A complete log of this run can be found in: /home/ubuntu/git/agent-keyboard/qa/agent-keyboard-assessment/npm-cache/_logs/2026-10-20T19_17_08_570Z-debug-0.log

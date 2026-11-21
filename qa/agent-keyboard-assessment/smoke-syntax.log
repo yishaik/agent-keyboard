@@ -1,0 +1,1 @@
+node --check worker/token-broker/test/smoke.mjs: PASS (exit 0)

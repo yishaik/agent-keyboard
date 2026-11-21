@@ -1,0 +1,11 @@
+Command: npm test
+Working directory: worker/token-broker
+Exit code: 1
+
+> test
+> node test/smoke.mjs
+
+Error: wrangler dev did not start:
+
+    at waitUp (file:///home/ubuntu/git/agent-keyboard/worker/token-broker/test/smoke.mjs:24:9)
+    at async file:///home/ubuntu/git/agent-keyboard/worker/token-broker/test/smoke.mjs:44:3

@@ -1,0 +1,8 @@
+Command: npm run typecheck
+Working directory: worker/token-broker
+Exit code: 127
+
+> typecheck
+> tsc --noEmit
+
+sh: 1: tsc: not found
